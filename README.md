@@ -1,3 +1,6 @@
-# mlm-form
+# Starting mlm-form
 
-Describe your project here.
+
+1. Clone the repo
+2. `pip install -e .`
+3. `mlm-form`
