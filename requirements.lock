@@ -29,7 +29,7 @@ click==8.1.7
     # via uvicorn
 colorama==0.4.6
     # via typer
-fastcore==1.6.3
+fastcore==1.6.7
     # via fastlite
     # via python-fasthtml
     # via sqlite-minutils
@@ -79,7 +79,7 @@ python-dateutil==2.9.0.post0
     # via python-fasthtml
 python-dotenv==1.0.1
     # via uvicorn
-python-fasthtml==0.2.4
+python-fasthtml==0.3.4
     # via mlm-form
 python-multipart==0.0.9
     # via python-fasthtml

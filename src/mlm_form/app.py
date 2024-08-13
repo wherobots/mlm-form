@@ -14,87 +14,85 @@ from pydantic import ValidationError, TypeAdapter
 
 def validate_single_field(model_class, field_name, value):
     field_info = model_class.model_fields[field_name]
-    # Create a TypeAdapter using the field's annotation/type
     adapter = TypeAdapter(field_info.annotation)
-    return adapter.validate_python(value)
+    try:
+        return adapter.validate_python(value)
+    except Exception as e:
+        return f"Error for field '{field_name}': {e}"
+
 
 app, rt = fast_app()
 
 @app.get('/')
 def homepage():
-    return Form(hx_post='/submit', hx_target='#submit-btn-container', hx_swap='outerHTML')(
-                # Calls /email route to validate email
-                Div(hx_target='this', hx_swap='outerHTML')(
-                    Label(_for='shape')('Shape'),
-                    Input(type='number', name='shape', id='shape', hx_post='/shape', hx_indicator='#shapeind'),
-                    Input(type='number', name='shape', id='shape', hx_post='/shape', hx_indicator='#shapeind'),
-                    Input(type='number', name='shape', id='shape', hx_post='/shape', hx_indicator='#shapeind'),
-                    Input(type='number', name='shape', id='shape', hx_post='/shape', hx_indicator='#shapeind')),
-                # Calls /cool route to validate cool
-                Div(hx_target='this', hx_swap='outerHTML')(
-                    Label(_for='cool')('Is this cool?'),
-                    Input(type='text', name='cool', id='cool', hx_post='/cool', hx_indicator='#coolind')),
-                # Calls /coolscale route to validate coolscale
-                Div(hx_target='this', hx_swap='outerHTML')(
-                    Label(_for='CoolScale')('How cool (scale of 1 - 10)?'),
-                    Input(type='number', name='CoolScale', id='CoolScale', hx_post='/coolscale', hx_indicator='#coolscaleind')),
-                # Submits the form which calls /submit route to validate whole form
-                Div(id='submit-btn-container')(
-                    Button(type='submit', id='submit-btn',)('Submit')))
+    return Grid(Form(hx_post='/submit', hx_target='#result', hx_trigger="input delay:200ms")(
+                inputListTemplate(label="Shape", name="shape", error_msg=None, input_type='number'),
+                ),
+                Div(id="result"),
+                Div(id="logs")
+            )
 
 ### Field Validation Routing ###
-# Validates the field and generates FastHTML with appropriate validation and template function
 
 @app.post('/shape')
-def check_shape(shape: list): return shapeInputTemplate(shape, validate_shape(shape))
+def check_shape(shape_1: int | None, shape_2: int | None, shape_3: int | None, shape_4: int | None):
+    shape = [shape_1, shape_2, shape_3, shape_4]
+    return shapeInputTemplate(shape, validate_shape(shape))
 
-@app.post('/cool')
-def contact_cool(cool: str): return coolInputTemplate(cool, validate_cool(cool))
-
-@app.post('/coolscale')
-def contact_coolscale(CoolScale: int): return coolScaleInputTemplate(CoolScale, validate_coolscale(CoolScale))
+# TODO make this a download button
+# @app.post('/submit')
+# def submit(shape_1:int, shape_2:int, shape_3:int, shape_4: int, cool: str, CoolScale: int):
+#     # Validates all fields in the form
+#     errors = {'shape': validate_shape([shape_1,shape_2,shape_3,shape_4]),
+#              'cool': validate_cool(cool),
+#              'coolscale': validate_coolscale(CoolScale) }
+#     # Removes the None values from the errors dictionary (No errors)
+#     errors = {k: v for k, v in errors.items() if v is not None}
+#     # Return Button with error message if they exist
+#     return Div(id='submit-btn-container')(
+#         Button(type='submit', id='submit-btn', hx_post='/submit', hx_target='#submit-btn-container', hx_swap='outerHTML')('Submit'),
+#         *[Div(error, style='color: red;') for error in errors.values()])
 
 @app.post('/submit')
-def submit(shape: list, cool: str, CoolScale: int):
-    # Validates all fields in the form
-    errors = {'shape': validate_shape(shape),
-             'cool': validate_cool(cool),
-             'coolscale': validate_coolscale(CoolScale) }
-    # Removes the None values from the errors dictionary (No errors)
-    errors = {k: v for k, v in errors.items() if v is not None}
-    # Return Button with error message if they exist
-    return Div(id='submit-btn-container')(
-        Button(type='submit', id='submit-btn', hx_post='/submit', hx_target='#submit-btn-container', hx_swap='outerHTML')('Submit'),
-        *[Div(error, style='color: red;') for error in errors.values()])
+def submit(d:dict):
+    # hack since I don't know how to pass 4 input values with array notation
+    d['shape'] = [d.pop(f'shape_{i+1}') for i in range(4)]
+    return d
 
 ########################
 ### Validation Logic ###
 ########################
 
 def validate_shape(shape: list):
-    # Check if email address is a valid one
     if not validate_single_field(InputStructure, "shape", shape):
         return "Please enter a valid shape"
 
-def validate_cool(cool: str):
-    if cool.lower() not in ["yes", "definitely"]: return "Yes or definitely are the only correct answers"
-
-def validate_coolscale(CoolScale: int):
-    if CoolScale < 1 or CoolScale > 10: return "Please enter a number between 1 and 10"
+def validate_dim_type(dim_order: list):
+    if not validate_single_field(InputStructure, "dim_order", dim_order):
+        return "Please enter a valid dimension ordering"
 
 ######################
 ### HTML Templates ###
 ######################
 
-def inputTemplate(label, name, val, errorMsg=None, input_type='text'):
-    # Generic template for replacing the input field and showing the validation message
-    return Div(hx_target='this', hx_swap='outerHTML', cls=f"{errorMsg if errorMsg else 'Valid'}")(
-               Label(label), # Creates label for the input field
-               Input(name=name,type=input_type,value=f'{val}',hx_post=f'/{name.lower()}',hx_indicator=f'#{name.lower()}ind'), # Creates input field
-               Div(f'{errorMsg}', style='color: red;') if errorMsg else None) # Creates red error message below if there is an error
+def inputTemplate(label, name, val, error_msg=None, input_type='text'):
+    return Div(hx_target='this', hx_swap='outerHTML', cls=f"{error_msg if error_msg else 'Valid'}")(
+               Label(label),
+               Input(name=name,type=input_type,value=f'{val}',hx_post=f'/{name.lower()}',hx_indicator=f'#{name.lower()}ind'),
+               Div(f'{error_msg}', style='color: red;') if error_msg else None)
 
-def shapeInputTemplate(val, errorMsg=None): return inputTemplate('Shape', 'shape', val, errorMsg)
+def inputListTemplate(label, name, values=[None, None, None, None], error_msg=None, input_type='number'):
+    return Div(hx_target='this', hx_swap='outerHTML', cls=f"{error_msg if error_msg else 'Valid'}")(
+        *[
+            item
+            for i, val in enumerate(values)
+            for item in (
+                Label(f"{label} {i+1}"),
+                Input(name=f'{name.lower()}_{i+1}', id=f'{name.lower()}_{i+1}', type=input_type, value=val, hx_post=f'/{name.lower()}', max = 10),
+            ) if not isinstance(item, str)
+        ],
+        Div(f'{error_msg}', style='color: red;') if error_msg else None
+    )
 
-def coolInputTemplate(val, errorMsg=None): return inputTemplate('Is this cool?', 'cool', val, errorMsg)
-
-def coolScaleInputTemplate(val, errorMsg=None): return inputTemplate('How cool (scale of 1 - 10)?', 'CoolScale', val, errorMsg, input_type='number')
+def shapeInputTemplate(values, error_msg=None):
+    return inputListTemplate('Shape', 'shape', values, error_msg)

@@ -6,7 +6,7 @@ authors = [
     { name = "Ryan Avery", email = "ryanbarryavery@gmail.com" }
 ]
 dependencies = [
-    "python-fasthtml>=0.2.4",
+    "python-fasthtml>=0.3.4",
     "stac-model>=0.2.0",
     "pydantic>=2.8.2",
     "pystac>=1.10.1",
