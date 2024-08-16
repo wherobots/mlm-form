@@ -96,7 +96,7 @@ def submit(d: dict):
         'pretrained_source',
         'total_parameters'
     ]
-    if all(d.get(key) is not '' for key in required_keys):
+    if all(d.get(key) != '' for key in required_keys):
         errors = {
             'shape': validate_shape(d['shape']),
             'model_name': validate_model_name(d.get('model_name')),
@@ -116,4 +116,3 @@ def submit(d: dict):
         return *[Div(error, style='color: red;') for error in errors.values()], d
 
     return Div("Please fill in all required fields before submitting.", style='color: red;'), d
-
