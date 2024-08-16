@@ -1,13 +1,5 @@
 {
     "version": 2,
-    "builds": [
-        {
-            "use": "@vercel/python",
-            "config": {
-                "installCommand": "pip install ."
-            }
-        }
-    ],
     "rewrites": [
         {
             "source": "/(.*)",
