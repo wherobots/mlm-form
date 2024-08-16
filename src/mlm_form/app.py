@@ -3,13 +3,12 @@ from fasthtml.common import *
 from .templates import *
 from .validation import *
 
-app, rt = fast_app()
+app, rt = fast_app(hdrs=(picolink))
 
 @app.get('/')
 def homepage():
     return Div(Head(
             Title("MLM Metadata Form"),
-            Link(rel="stylesheet", href="https://unpkg.com/@picocss/pico@1.5.5/css/pico.min.css")
         ),
         Body(
             Main(
