@@ -1,6 +1,4 @@
 # Starting mlm-form
 
-
-1. Clone the repo
-2. `pip install -e .`
-3. `mlm-form`
+1. `pip install mlm-form`
+2. `mlm-form`

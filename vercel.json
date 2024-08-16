@@ -1,0 +1,12 @@
+{
+    "version": 2,
+    "builds": [
+      {
+        "use": "@vercel/python",
+        "config": {
+          "installCommand": "pip install mlm-form",
+          "startCommand": "mlm-form"
+        }
+      }
+    ]
+  }
