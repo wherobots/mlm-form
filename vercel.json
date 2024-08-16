@@ -1,12 +1,15 @@
 {
     "version": 2,
     "builds": [
-      {
-        "use": "@vercel/python",
-        "config": {
-          "installCommand": "pip install mlm-form",
-          "startCommand": "mlm-form"
+        {
+            "use": "@vercel/python",
+            "config": {
+                "installCommand": "pip install mlm-form",
+                "startCommand": "mlm-form"
+            }
         }
-      }
-    ]
-  }
+    ],
+    "env": {
+        "VERCEL_LOG_LEVEL": "debug"
+    }
+}
