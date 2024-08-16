@@ -1,7 +1,7 @@
 from fasthtml.common import *
 
-from .templates import *
-from .validation import *
+from src.mlm_form.templates import *
+from src.mlm_form.validation import *
 
 app, rt = fast_app(hdrs=(picolink))
 
@@ -116,3 +116,5 @@ def submit(d: dict):
         return *[Div(error, style='color: red;') for error in errors.values()], d
 
     return Div("Please fill in all required fields before submitting.", style='color: red;'), d
+
+serve()

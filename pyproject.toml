@@ -2,9 +2,7 @@
 name = "mlm-form"
 version = "0.1.0"
 description = "Runs a single page web app based on FastHTML to create Machine Learning Model metadata."
-authors = [
-    { name = "Ryan Avery", email = "ryanbarryavery@gmail.com" }
-]
+authors = [{ name = "Ryan Avery", email = "ryanbarryavery@gmail.com" }]
 dependencies = [
     "python-fasthtml>=0.3.4",
     "stac-model>=0.2.0",
@@ -12,7 +10,7 @@ dependencies = [
     "pystac>=1.10.1",
 ]
 readme = "README.md"
-requires-python = ">= 3.8"
+requires-python = ">= 3.10"
 
 [project.scripts]
 "mlm-form" = "mlm_form:main"
