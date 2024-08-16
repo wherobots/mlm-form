@@ -4,12 +4,14 @@
         {
             "use": "@vercel/python",
             "config": {
-                "installCommand": "pip install mlm-form",
-                "startCommand": "mlm-form"
+                "installCommand": "pip install ."
             }
         }
     ],
-    "env": {
-        "VERCEL_LOG_LEVEL": "debug"
-    }
+    "rewrites": [
+        {
+            "source": "/(.*)",
+            "destination": "/src/mlm_form"
+        }
+    ]
 }
