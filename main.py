@@ -1,8 +1,9 @@
 from fasthtml.common import *
 
-from src.mlm_form.templates import inputListTemplate, inputTemplate, selectEnumTemplate
+from src.mlm_form.templates import inputListTemplate, inputTemplate, selectEnumTemplate, selectCheckboxTemplate
 from src.mlm_form.validation import *
 from stac_model.base import TaskEnum
+from stac_model.runtime import AcceleratorEnum
 
 app, rt = fast_app(hdrs=(picolink))
 
@@ -17,7 +18,7 @@ def homepage():
         Form(hx_post='/submit', hx_target='#result', hx_trigger="input delay:200ms")(
             inputTemplate(label="Model Name", name="model_name", val=None, input_type='text'),
             inputTemplate(label="Architecture", name="architecture", val=None, input_type='text'),
-            selectEnumTemplate(label="Tasks", options=[task.value for task in TaskEnum],  name="tasks", error_msg=None),
+            selectCheckboxTemplate(label="Tasks", options=[task.value for task in TaskEnum],  name="tasks"),
             inputTemplate(label="Framework", name="framework", val=None, input_type='text'),
             inputTemplate(label="Framework Version", name="framework_version", val=None, input_type='text'),
             inputTemplate(label="Memory Size", name="memory_size", val=None, input_type='number'),
@@ -25,7 +26,7 @@ def homepage():
             inputTemplate(label="Is it pretrained?", name="pretrained", val=None, input_type='boolean'),
             inputTemplate(label="Pretrained source", name="pretrained_source", val=None, input_type='text'),
             inputTemplate(label="Batch size suggestion", name="batch_size_suggestion", val=None, input_type='number'),
-            inputTemplate(label="Accelerator", name="accelerator", val=None, input_type='text'),
+            selectEnumTemplate(label="Accelerator", options=[task.value for task in AcceleratorEnum],  name="accelerator", error_msg=None),
             inputTemplate(label="Accelerator constrained", name="accelerator_constrained", val=None, input_type='boolean'),
             inputTemplate(label="Accelerator Summary", name="accelerator_summary", val=None, input_type='text'),
             inputTemplate(label="Accelerator Count", name="accelerator_count", val=None, input_type='number'),

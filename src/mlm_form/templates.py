@@ -29,12 +29,25 @@ def mk_opts(nm, cs):
         Option(f'-- select {nm} --', disabled='', selected='', value=''),
         *map(Option, cs))
 
+def mk_checkbox(options):
+    return Div(style="display: flex; flex-direction: column; align-items: flex-start;")(
+        *[Div(CheckboxX(id=option, label=option), style="width: 100%;") for option in options]
+    )
 
 def selectEnumTemplate(label, options, name, error_msg=None):
     return Div(hx_target='this', hx_swap='outerHTML', cls=f"{error_msg if error_msg else 'Valid'}", style="display: flex; flex-direction: column; align-items: center;")(
         Label(label),
         Select(
-            *mk_opts('task', options),
-            name='task',
+            *mk_opts(name, options),
+            name=name,
+            hx_post=f'/{name.lower()}'),
+        Div(f'{error_msg}', style='color: red;') if error_msg else None)
+
+def selectCheckboxTemplate(label, options, name, error_msg=None):
+    return Div(hx_target='this', hx_swap='outerHTML', cls=f"{error_msg if error_msg else 'Valid'}", style="display: flex; flex-direction: column; align-items: center;")(
+        Label(label),
+        Group(
+            mk_checkbox(options),
+            name=name,
             hx_post=f'/{name.lower()}'),
         Div(f'{error_msg}', style='color: red;') if error_msg else None)
