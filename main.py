@@ -7,30 +7,34 @@ app, rt = fast_app(hdrs=(picolink))
 
 @app.get('/')
 def homepage():
-    return Div(Head(
-            Title("MLM Metadata Form"),
-        ),
-        Body(
+    return Body(
             Main(
                 Section(
                 H2("Machine Learning Model Metadata Form"),
-                P("Please complete all fields below to describe the machine learning model metadata."),)),
+                P("Please complete all fields below to describe the machine learning model metadata."))),
         Grid(
         Form(hx_post='/submit', hx_target='#result', hx_trigger="input delay:200ms")(
-            inputListTemplate(label="Shape", name="shape", error_msg=None, input_type='number'),
             inputTemplate(label="Model Name", name="model_name", val=None, input_type='text'),
             inputTemplate(label="Architecture", name="architecture", val=None, input_type='text'),
+            inputListTemplate(label="Tasks", name="tasks", error_msg=None, input_type='text'),
             inputTemplate(label="Framework", name="framework", val=None, input_type='text'),
             inputTemplate(label="Framework Version", name="framework_version", val=None, input_type='text'),
-            inputTemplate(label="Accelerator", name="accelerator", val=None, input_type='text'),
-            inputTemplate(label="Accelerator Summary", name="accelerator_summary", val=None, input_type='text'),
-            inputTemplate(label="File Size", name="file_size", val=None, input_type='number'),
             inputTemplate(label="Memory Size", name="memory_size", val=None, input_type='number'),
-            inputTemplate(label="Pretrained Source", name="pretrained_source", val=None, input_type='text'),
             inputTemplate(label="Total Parameters", name="total_parameters", val=None, input_type='number'),
-        style="padding-right: 130px;"),
+            inputTemplate(label="Is it pretrained?", name="pretrained", val=None, input_type='boolean'),
+            inputTemplate(label="Pretrained source", name="pretrained_source", val=None, input_type='text'),
+            inputTemplate(label="Batch size suggestion", name="batch_size_suggestion", val=None, input_type='number'),
+            inputTemplate(label="Accelerator", name="accelerator", val=None, input_type='text'),
+            inputTemplate(label="Accelerator constrained", name="accelerator_constrained", val=None, input_type='boolean'),
+            inputTemplate(label="Accelerator Summary", name="accelerator_summary", val=None, input_type='text'),
+            inputTemplate(label="Accelerator Count", name="accelerator_count", val=None, input_type='number'),
+            inputTemplate(label="MLM Input", name="mlm_input", val=None, input_type='text'),
+            inputTemplate(label="MLM Output", name="mlm_output", val=None, input_type='text'),
+            inputTemplate(label="MLM hyperparameters", name="hyperparameters", val=None, input_type='text'),
+            inputListTemplate(label="Shape", name="shape", error_msg=None, input_type='number'),
+        ),
         Div(id="result"),
-    )), style="padding-left: 40px;")
+    ))
 
 ### Field Validation Routing ###
 
