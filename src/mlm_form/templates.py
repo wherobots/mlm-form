@@ -23,3 +23,18 @@ def inputListTemplate(label, name, values=[None, None, None, None], error_msg=No
         ),
         Div(f'{error_msg}', style='color: red;') if error_msg else None
     )
+
+def mk_opts(nm, cs):
+    return (
+        Option(f'-- select {nm} --', disabled='', selected='', value=''),
+        *map(Option, cs))
+
+
+def selectEnumTemplate(label, options, name, error_msg=None):
+    return Div(hx_target='this', hx_swap='outerHTML', cls=f"{error_msg if error_msg else 'Valid'}", style="display: flex; flex-direction: column; align-items: center;")(
+        Label(label),
+        Select(
+            *mk_opts('task', options),
+            name='task',
+            hx_post=f'/{name.lower()}'),
+        Div(f'{error_msg}', style='color: red;') if error_msg else None)

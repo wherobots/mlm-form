@@ -1,7 +1,8 @@
 from fasthtml.common import *
 
-from src.mlm_form.templates import *
+from src.mlm_form.templates import inputListTemplate, inputTemplate, selectEnumTemplate
 from src.mlm_form.validation import *
+from stac_model.base import TaskEnum
 
 app, rt = fast_app(hdrs=(picolink))
 
@@ -16,7 +17,7 @@ def homepage():
         Form(hx_post='/submit', hx_target='#result', hx_trigger="input delay:200ms")(
             inputTemplate(label="Model Name", name="model_name", val=None, input_type='text'),
             inputTemplate(label="Architecture", name="architecture", val=None, input_type='text'),
-            inputListTemplate(label="Tasks", name="tasks", error_msg=None, input_type='text'),
+            selectEnumTemplate(label="Tasks", options=[task.value for task in TaskEnum],  name="tasks", error_msg=None),
             inputTemplate(label="Framework", name="framework", val=None, input_type='text'),
             inputTemplate(label="Framework Version", name="framework_version", val=None, input_type='text'),
             inputTemplate(label="Memory Size", name="memory_size", val=None, input_type='number'),
