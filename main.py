@@ -2,39 +2,45 @@ from fasthtml.common import *
 
 from src.mlm_form.templates import *
 from src.mlm_form.validation import *
+from stac_model.base import TaskEnum
+from stac_model.runtime import AcceleratorEnum
 
 app, rt = fast_app(hdrs=(picolink))
+tasks = [task.value for task in TaskEnum]
 
 @app.get('/')
 def homepage():
     return Body(
-            Main(
-                Section(
+        Main(
+            Section(
                 H2("Machine Learning Model Metadata Form"),
-                P("Please complete all fields below to describe the machine learning model metadata."))),
-        Grid(
-        Form(hx_post='/submit', hx_target='#result', hx_trigger="input delay:200ms")(
-            inputTemplate(label="Model Name", name="model_name", val=None, input_type='text'),
-            inputTemplate(label="Architecture", name="architecture", val=None, input_type='text'),
-            inputListTemplate(label="Tasks", name="tasks", error_msg=None, input_type='text'),
-            inputTemplate(label="Framework", name="framework", val=None, input_type='text'),
-            inputTemplate(label="Framework Version", name="framework_version", val=None, input_type='text'),
-            inputTemplate(label="Memory Size", name="memory_size", val=None, input_type='number'),
-            inputTemplate(label="Total Parameters", name="total_parameters", val=None, input_type='number'),
-            inputTemplate(label="Is it pretrained?", name="pretrained", val=None, input_type='boolean'),
-            inputTemplate(label="Pretrained source", name="pretrained_source", val=None, input_type='text'),
-            inputTemplate(label="Batch size suggestion", name="batch_size_suggestion", val=None, input_type='number'),
-            inputTemplate(label="Accelerator", name="accelerator", val=None, input_type='text'),
-            inputTemplate(label="Accelerator constrained", name="accelerator_constrained", val=None, input_type='boolean'),
-            inputTemplate(label="Accelerator Summary", name="accelerator_summary", val=None, input_type='text'),
-            inputTemplate(label="Accelerator Count", name="accelerator_count", val=None, input_type='number'),
-            inputTemplate(label="MLM Input", name="mlm_input", val=None, input_type='text'),
-            inputTemplate(label="MLM Output", name="mlm_output", val=None, input_type='text'),
-            inputTemplate(label="MLM hyperparameters", name="hyperparameters", val=None, input_type='text'),
-            inputListTemplate(label="Shape", name="shape", error_msg=None, input_type='number'),
-        ),
-        Div(id="result"),
-    ))
+                P("Please complete all fields below to describe the machine learning model metadata.")
+            ),
+            Grid(
+                Form(hx_post='/submit', hx_target='#result', hx_trigger="input delay:200ms")(
+                    inputTemplate(label="Model Name", name="model_name", val=None, input_type='text'),
+                    inputTemplate(label="Architecture", name="architecture", val=None, input_type='text'),
+                    selectCheckboxTemplate(label="Tasks", options=tasks, name="tasks"),
+                    inputTemplate(label="Framework", name="framework", val=None, input_type='text'),
+                    inputTemplate(label="Framework Version", name="framework_version", val=None, input_type='text'),
+                    inputTemplate(label="Memory Size", name="memory_size", val=None, input_type='number'),
+                    inputTemplate(label="Total Parameters", name="total_parameters", val=None, input_type='number'),
+                    inputTemplate(label="Is it pretrained?", name="pretrained", val=None, input_type='boolean'),
+                    inputTemplate(label="Pretrained source", name="pretrained_source", val=None, input_type='text'),
+                    inputTemplate(label="Batch size suggestion", name="batch_size_suggestion", val=None, input_type='number'),
+                    selectEnumTemplate(label="Accelerator", options=[task.value for task in AcceleratorEnum], name="accelerator", error_msg=None),
+                    trueFalseRadioTemplate(label="Accelerator constrained", name="accelerator_constrained"),
+                    inputTemplate(label="Accelerator Summary", name="accelerator_summary", val=None, input_type='text'),
+                    inputTemplate(label="Accelerator Count", name="accelerator_count", val=None, input_type='number'),
+                    modelInputTemplate(label="MLM Input", name="mlm_input"),
+                    inputTemplate(label="MLM Output", name="mlm_output", val=None, input_type='text'),
+                    inputTemplate(label="MLM hyperparameters", name="hyperparameters", val=None, input_type='text'),
+                    inputListTemplate(label="Shape", name="shape", error_msg=None, input_type='number'),
+                ),
+                Div(id="result", style="overflow-y: auto; height: 300px; overflow-x: hidden;") # these don't make the result div follow scrolling :(
+            )
+        )
+    )
 
 ### Field Validation Routing ###
 
@@ -85,8 +91,11 @@ def check_total_parameters(total_parameters: int | None):
 
 @app.post('/submit')
 def submit(d: dict):
-    d['shape'] = [int(d.pop(f'shape_{i+1}')) if d.get(f'shape_{i+1}') else None for i in range(4)]
-
+    d['shape'] = [int(d.pop(f'shape_{i+1}')) if d.get(f'shape_{i+1}') else d.pop(f'shape_{i+1}') for i in range(4)]
+    [task.value for task in TaskEnum]
+    # from the fasthtml discord https://discordapp.com/channels/689892369998676007/1247700012952191049/1273789690691981412
+    # this might change past version 0.4.4 it seems pretty hacky
+    d['tasks'] = [task for task in tasks if d.pop(task, None)]
     required_keys = [
         'shape',
         'model_name',
