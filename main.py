@@ -1,5 +1,6 @@
 from fasthtml.common import *
 
+from src.mlm_form.styles import *
 from src.mlm_form.templates import *
 from src.mlm_form.validation import *
 from stac_model.base import TaskEnum
@@ -20,27 +21,34 @@ def homepage():
             ),
             Grid(
                 Form(hx_post='/submit', hx_target='#result', hx_trigger="input delay:200ms")(
-                    inputTemplate(label="Model Name", name="model_name", val=None, input_type='text'),
-                    inputTemplate(label="Architecture", name="architecture", val=None, input_type='text'),
-                    selectCheckboxTemplate(label="Tasks", options=tasks, name="tasks"),
-                    inputTemplate(label="Framework", name="framework", val=None, input_type='text'),
-                    inputTemplate(label="Framework Version", name="framework_version", val=None, input_type='text'),
-                    inputTemplate(label="Memory Size", name="memory_size", val=None, input_type='number'),
-                    inputTemplate(label="Total Parameters", name="total_parameters", val=None, input_type='number'),
-                    inputTemplate(label="Is it pretrained?", name="pretrained", val=None, input_type='boolean'),
-                    inputTemplate(label="Pretrained source", name="pretrained_source", val=None, input_type='text'),
-                    inputTemplate(label="Batch size suggestion", name="batch_size_suggestion", val=None, input_type='number'),
-                    selectEnumTemplate(label="Accelerator", options=[task.value for task in AcceleratorEnum], name="accelerator", error_msg=None),
+                    inputTemplate(label="Model Name", name="model_name", val='', input_type='text'),
+                    inputTemplate(label="Architecture", name="architecture", val='', input_type='text'),
+                    selectCheckboxTemplate(label="Tasks", options=tasks, name="tasks", canValidateInline=False),
+                    inputTemplate(label="Framework", name="framework", val='', input_type='text'),
+                    inputTemplate(label="Framework Version", name="framework_version", val='', input_type='text'),
+                    inputTemplate(label="Memory Size", name="memory_size", val='', input_type='number'),
+                    inputTemplate(label="Total Parameters", name="total_parameters", val='', input_type='number'),
+                    inputTemplate(label="Is it pretrained?", name="pretrained", val='', input_type='boolean'),
+                    inputTemplate(label="Pretrained source", name="pretrained_source", val='', input_type='text'),
+                    inputTemplate(label="Batch size suggestion", name="batch_size_suggestion", val='', input_type='number'),
+                    selectEnumTemplate(
+                        label="Accelerator", 
+                        options=[task.value for task in AcceleratorEnum], 
+                        name="accelerator", 
+                        error_msg=None, 
+                        canValidateInline=False
+                    ),
                     trueFalseRadioTemplate(label="Accelerator constrained", name="accelerator_constrained"),
-                    inputTemplate(label="Accelerator Summary", name="accelerator_summary", val=None, input_type='text'),
-                    inputTemplate(label="Accelerator Count", name="accelerator_count", val=None, input_type='number'),
+                    inputTemplate(label="Accelerator Summary", name="accelerator_summary", val='', input_type='text'),
+                    inputTemplate(label="Accelerator Count", name="accelerator_count", val='', input_type='number'),
                     modelInputTemplate(label="MLM Input", name="mlm_input"),
-                    inputTemplate(label="MLM Output", name="mlm_output", val=None, input_type='text'),
-                    inputTemplate(label="MLM hyperparameters", name="hyperparameters", val=None, input_type='text'),
+                    inputTemplate(label="MLM Output", name="mlm_output", val='', input_type='text'),
+                    inputTemplate(label="MLM hyperparameters", name="hyperparameters", val='', input_type='text'),
                     inputListTemplate(label="Shape", name="shape", error_msg=None, input_type='number'),
                 ),
-                Div(id="result", style="overflow-y: auto; height: 300px; overflow-x: hidden;") # these don't make the result div follow scrolling :(
-            )
+                outputTemplate('result')
+            ),
+            style=main_element_style
         )
     )
 
@@ -66,10 +74,6 @@ def check_framework(framework: str | None):
 @app.post('/framework_version')
 def check_framework_version(framework_version: str | None):
     return inputTemplate("Framework Version", "framework_version", framework_version, validate_framework_version(framework_version))
-
-@app.post('/accelerator')
-def check_accelerator(accelerator: str | None):
-    return inputTemplate("Accelerator", "accelerator", accelerator, validate_accelerator(accelerator))
 
 @app.post('/accelerator_summary')
 def check_accelerator_summary(accelerator_summary: str | None):
@@ -98,20 +102,7 @@ def submit(d: dict):
     # from the fasthtml discord https://discordapp.com/channels/689892369998676007/1247700012952191049/1273789690691981412
     # this might change past version 0.4.4 it seems pretty hacky
     d['tasks'] = [task for task in tasks if d.pop(task, None)]
-    required_keys = [
-        'shape',
-        'model_name',
-        'architecture',
-        'framework',
-        'framework_version',
-        'accelerator',
-        'accelerator_summary',
-        'file_size',
-        'memory_size',
-        'pretrained_source',
-        'total_parameters'
-    ]
-    if all(d.get(key) != '' for key in required_keys):
+    if all(d.get(key) != '' for key in model_required_keys):
         errors = {
             'shape': validate_shape(d['shape']),
             'model_name': validate_model_name(d.get('model_name')),
@@ -128,9 +119,9 @@ def submit(d: dict):
 
         errors = {k: v for k, v in errors.items() if v is not None}
 
-        return *[Div(error, style='color: red;') for error in errors.values()], d
+        return *[Div(error, style='color: red;') for error in errors.values()], prettyJsonTemplate(d)
 
-    return Div("Please fill in all required fields before submitting.", style='color: red;'), d
+    return Div("Please fill in all required fields before submitting.", style='color: red;'), prettyJsonTemplate(d)
 
 roles = [role for role in model_asset_roles if role not in model_asset_implicit_roles]
 
@@ -155,8 +146,9 @@ def asset_homepage():
                         canValidateInline=False
                     ),
                 ),
-                Div(id="result", style="overflow-y: auto; height: 300px; overflow-x: hidden;") # these don't make the result div follow scrolling :(
-            )
+                outputTemplate('result')
+            ),
+            style=main_element_style
         )
     )
 
@@ -181,8 +173,8 @@ def submit_asset(d: dict):
     try:
         validation_result = pystac.validation.validate(dummy_item)
     except pystac.errors.STACValidationError as e:
-        return Div(e, style='color: red;'), d
+        return Div(e, style='color: red;'), prettyJsonTemplate(d)
     
-    return d
+    return prettyJsonTemplate(d)
 
 serve()
