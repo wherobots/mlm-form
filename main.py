@@ -4,6 +4,8 @@ from src.mlm_form.templates import *
 from src.mlm_form.validation import *
 from stac_model.base import TaskEnum
 from stac_model.runtime import AcceleratorEnum
+from datetime import datetime
+import pystac
 
 app, rt = fast_app(hdrs=(picolink))
 tasks = [task.value for task in TaskEnum]
@@ -129,5 +131,58 @@ def submit(d: dict):
         return *[Div(error, style='color: red;') for error in errors.values()], d
 
     return Div("Please fill in all required fields before submitting.", style='color: red;'), d
+
+roles = [role for role in model_asset_roles if role not in model_asset_implicit_roles]
+
+@app.get('/asset')
+def asset_homepage():
+    return Body(
+        Main(
+            Section(
+                H2("Machine Learning Model Asset Form"),
+                P("Please complete all fields below to describe the machine learning model asset.")
+            ),
+            Grid(
+                Form(hx_post='/submit_asset', hx_target='#result', hx_trigger="input delay:200ms")(
+                    inputTemplate(label="Title", name="title", val='', input_type='text', canValidateInline=False),
+                    inputTemplate(label="URI", name="href", val='', input_type='text', canValidateInline=False),
+                    inputTemplate(label="Media Type", name="type", val='', input_type='text', canValidateInline=False),
+                    selectCheckboxTemplate(label="Roles", options=roles, name="roles", canValidateInline=False),
+                    selectEnumTemplate(
+                        label="Artifact Type",
+                        options=model_asset_artifact_types,
+                        name="mlm:artifact_type",
+                        canValidateInline=False
+                    ),
+                ),
+                Div(id="result", style="overflow-y: auto; height: 300px; overflow-x: hidden;") # these don't make the result div follow scrolling :(
+            )
+        )
+    )
+
+@app.post('/submit_asset')
+def submit_asset(d: dict):
+    d['roles'] = model_asset_implicit_roles + [role for role in roles if d.pop(role, None)]
+    # pystac doesn't directly support validating an asset, so put the asset inside a 
+    # dummy item and run the validation on that
+    dummy_item = pystac.Item(
+        id="example-item",
+        geometry={
+            "type": "Polygon",
+            "coordinates": [
+                [[-101.0, 40.0], [-101.0, 41.0], [-100.0, 41.0], [-100.0, 40.0], [-101.0, 40.0]]
+            ]
+        },
+        bbox=[-101.0, 40.0, -100.0, 41.0],
+        datetime=datetime.utcnow(),
+        properties={}
+    )
+    dummy_item.assets["example"] = pystac.Asset.from_dict(d)
+    try:
+        validation_result = pystac.validation.validate(dummy_item)
+    except pystac.errors.STACValidationError as e:
+        return Div(e, style='color: red;'), d
+    
+    return d
 
 serve()
