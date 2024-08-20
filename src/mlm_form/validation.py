@@ -3,6 +3,11 @@ from stac_model.output import MLMClassification, ModelOutput, ModelResult
 from stac_model.schema import MLModelProperties
 from pydantic import TypeAdapter, ValidationError
 
+# TODO try to get these from pystac...
+model_asset_roles = ['mlm:model', 'mlm:weights', 'mlm:checkpoint']
+model_asset_implicit_roles = ['mlm:model']
+model_asset_artifact_types = ['torch.save', 'torch.jit.script', 'torch.export', 'torch.compile']
+
 def create_validation_function(model_class, field_name, user_friendly_message):
     def validation_function(value):
         error = validate_single_field(model_class, field_name, value)
