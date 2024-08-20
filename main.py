@@ -6,6 +6,7 @@ from stac_model.base import TaskEnum
 from stac_model.runtime import AcceleratorEnum
 
 app, rt = fast_app(hdrs=(picolink))
+tasks = [task.value for task in TaskEnum]
 
 @app.get('/')
 def homepage():
@@ -18,7 +19,7 @@ def homepage():
         Form(hx_post='/submit', hx_target='#result', hx_trigger="input delay:200ms")(
             inputTemplate(label="Model Name", name="model_name", val=None, input_type='text'),
             inputTemplate(label="Architecture", name="architecture", val=None, input_type='text'),
-            selectCheckboxTemplate(label="Tasks", options=[task.value for task in TaskEnum],  name="tasks"),
+            selectCheckboxTemplate(label="Tasks", options=tasks,  name="tasks"),
             inputTemplate(label="Framework", name="framework", val=None, input_type='text'),
             inputTemplate(label="Framework Version", name="framework_version", val=None, input_type='text'),
             inputTemplate(label="Memory Size", name="memory_size", val=None, input_type='number'),
@@ -87,8 +88,11 @@ def check_total_parameters(total_parameters: int | None):
 
 @app.post('/submit')
 def submit(d: dict):
-    d['shape'] = [int(d.pop(f'shape_{i+1}')) if d.get(f'shape_{i+1}') else None for i in range(4)]
-
+    d['shape'] = [int(d.pop(f'shape_{i+1}')) if d.get(f'shape_{i+1}') else d.pop(f'shape_{i+1}') for i in range(4)]
+    [task.value for task in TaskEnum]
+    # from the fasthtml discord https://discordapp.com/channels/689892369998676007/1247700012952191049/1273789690691981412
+    # this might change past version 0.4.4 it seems pretty hacky
+    d['tasks'] = [task for task in tasks if d.pop(task, None)]
     required_keys = [
         'shape',
         'model_name',
