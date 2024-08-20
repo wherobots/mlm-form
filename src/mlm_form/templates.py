@@ -65,3 +65,76 @@ def trueFalseRadioTemplate(label, name, error_msg=None):
         Div(f'{error_msg}', style='color: red;') if error_msg else None,
         style="display: flex; flex-direction: column; align-items: center;"
     )
+
+def modelInputTemplate(label, name, error_msg=None):
+    return Div(
+        Label(label),
+        Div(
+            Label("Name"),
+            Input(type="text", name=f"{name}[name]"),
+            style="display: flex; flex-direction: column; align-items: flex-start;"
+        ),
+        Div(
+            Label("Bands"),
+            Input(type="text", name=f"{name}[bands]"),
+            style="display: flex; flex-direction: column; align-items: flex-start;"
+        ),
+        Div(
+            Label("Norm by Channel"),
+            CheckboxX(name=f"{name}[norm_by_channel]"),
+            style="display: flex; flex-direction: column; align-items: flex-start;"
+        ),
+        Div(
+            Label("Norm Type"),
+            Select(
+                Option("Select Norm Type", disabled=True, selected=True),
+                Option("min-max", value="min-max"),
+                Option("z-score", value="z-score"),
+                Option("l1", value="l1"),
+                Option("l2", value="l2"),
+                Option("l2sqr", value="l2sqr"),
+                Option("hamming", value="hamming"),
+                Option("hamming2", value="hamming2"),
+                Option("type-mask", value="type-mask"),
+                Option("relative", value="relative"),
+                Option("inf", value="inf"),
+                name=f"{name}[norm_type]"
+            ),
+            style="display: flex; flex-direction: column; align-items: flex-start;"
+        ),
+        Div(
+            Label("Norm Clip"),
+            Input(type="text", name=f"{name}[norm_clip]"),
+            style="display: flex; flex-direction: column; align-items: flex-start;"
+        ),
+        Div(
+            Label("Resize Type"),
+            Select(
+                Option("Select Resize Type", disabled=True, selected=True),
+                Option("crop", value="crop"),
+                Option("pad", value="pad"),
+                Option("interpolation-nearest", value="interpolation-nearest"),
+                Option("interpolation-linear", value="interpolation-linear"),
+                Option("interpolation-cubic", value="interpolation-cubic"),
+                Option("interpolation-area", value="interpolation-area"),
+                Option("interpolation-lanczos4", value="interpolation-lanczos4"),
+                Option("interpolation-max", value="interpolation-max"),
+                Option("wrap-fill-outliers", value="wrap-fill-outliers"),
+                Option("wrap-inverse-map", value="wrap-inverse-map"),
+                name=f"{name}[resize_type]"
+            ),
+            style="display: flex; flex-direction: column; align-items: flex-start;"
+        ),
+        Div(
+            Label("Statistics"),
+            Input(type="text", name=f"{name}[statistics]"),
+            style="display: flex; flex-direction: column; align-items: flex-start;"
+        ),
+        Div(
+            Label("Pre Processing Function"),
+            Input(type="text", name=f"{name}[pre_processing_function]"),
+            style="display: flex; flex-direction: column; align-items: flex-start;"
+        ),
+        Div(f'{error_msg}', style='color: red;') if error_msg else None,
+        style="display: flex; flex-direction: column; align-items: center;"
+    )

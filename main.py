@@ -1,6 +1,6 @@
 from fasthtml.common import *
 
-from src.mlm_form.templates import inputListTemplate, inputTemplate, selectEnumTemplate, trueFalseRadioTemplate, selectCheckboxTemplate
+from src.mlm_form.templates import *
 from src.mlm_form.validation import *
 from stac_model.base import TaskEnum
 from stac_model.runtime import AcceleratorEnum
@@ -32,7 +32,7 @@ def homepage():
                     trueFalseRadioTemplate(label="Accelerator constrained", name="accelerator_constrained"),
                     inputTemplate(label="Accelerator Summary", name="accelerator_summary", val=None, input_type='text'),
                     inputTemplate(label="Accelerator Count", name="accelerator_count", val=None, input_type='number'),
-                    inputTemplate(label="MLM Input", name="mlm_input", val=None, input_type='text'),
+                    modelInputTemplate(label="MLM Input", name="mlm_input"),
                     inputTemplate(label="MLM Output", name="mlm_output", val=None, input_type='text'),
                     inputTemplate(label="MLM hyperparameters", name="hyperparameters", val=None, input_type='text'),
                     inputListTemplate(label="Shape", name="shape", error_msg=None, input_type='number'),
