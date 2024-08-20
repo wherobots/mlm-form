@@ -51,3 +51,17 @@ def selectCheckboxTemplate(label, options, name, error_msg=None):
             name=name,
             hx_post=f'/{name.lower()}'),
         Div(f'{error_msg}', style='color: red;') if error_msg else None)
+
+def trueFalseRadioTemplate(label, name, error_msg=None):
+    return Div(
+        Label(label),
+        Div(
+            Input(type="radio", name=name, value="true"),
+            Label("True", for_=name),
+            Input(type="radio", name=name, value="false"),
+            Label("False", for_=name),
+            style="display: flex; flex-direction: row; align-items: center;"
+        ),
+        Div(f'{error_msg}', style='color: red;') if error_msg else None,
+        style="display: flex; flex-direction: column; align-items: center;"
+    )
