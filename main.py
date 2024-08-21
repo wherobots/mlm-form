@@ -16,8 +16,13 @@ tasks = [task.value for task in TaskEnum]
 def homepage():
     return Body(
         Main(
+            Header(
+                H1("Machine Learning Model Metadata Form"),
+                Nav(
+                    A("Asset Form", href="/asset")
+                )
+            ),
             Section(
-                H2("Machine Learning Model Metadata Form"),
                 P("Please complete all fields below to describe the machine learning model metadata.")
             ),
             Grid(
@@ -97,12 +102,13 @@ def check_total_parameters(total_parameters: int | None):
     return inputTemplate("Total Parameters", "total_parameters", total_parameters, validate_total_parameters(total_parameters))
 
 @app.post('/submit')
-def submit(d: dict):
-
+def submit(session, d: dict):
+    session.setdefault('result_d', {})
     d['shape'] = [int(d.pop(f'shape_{i+1}')) if d.get(f'shape_{i+1}') else d.pop(f'shape_{i+1}') for i in range(4)]
     # from the fasthtml discord https://discordapp.com/channels/689892369998676007/1247700012952191049/1273789690691981412
     # this might change past version 0.4.4 it seems pretty hacky
     d['tasks'] = [task for task in tasks if d.pop(task, None)]
+    session['result_d'].update(d)
     if all(d.get(key) != '' for key in model_required_keys):
         errors = {
             'shape': validate_shape(d['shape']),
@@ -119,10 +125,8 @@ def submit(d: dict):
         }
 
         errors = {k: v for k, v in errors.items() if v is not None}
-
-        return *[error_template(error) for error in errors.values()], prettyJsonTemplate(d)
-
-    return Div("Please fill in all required fields before submitting.", style='color: red;'), prettyJsonTemplate(d)
+        return *[error_template(error) for error in errors.values()], prettyJsonTemplate(session['result_d'])
+    return Div("Please fill in all required fields before submitting.", style='color: red;'), prettyJsonTemplate(session['result_d'])
 
 roles = [role for role in model_asset_roles if role not in model_asset_implicit_roles]
 
@@ -130,8 +134,13 @@ roles = [role for role in model_asset_roles if role not in model_asset_implicit_
 def asset_homepage():
     return Body(
         Main(
+            Header(
+                H1("Machine Learning Model Metadata Form"),
+                Nav(
+                    A("MLM Form", href="/")
+                )
+            ),
             Section(
-                H2("Machine Learning Model Asset Form"),
                 P("Please complete all fields below to describe the machine learning model asset.")
             ),
             Grid(
@@ -154,8 +163,11 @@ def asset_homepage():
     )
 
 @app.post('/submit_asset')
-def submit_asset(d: dict):
+def submit_asset(session, d: dict):
+    session.setdefault('result_d', {})
     d['roles'] = model_asset_implicit_roles + [role for role in roles if d.pop(role, None)]
+    session['result_d']['assets']= {}
+    session['result_d']['assets'].update(d)
     # pystac doesn't directly support validating an asset, so put the asset inside a
     # dummy item and run the validation on that
     dummy_item = pystac.Item(
@@ -174,8 +186,7 @@ def submit_asset(d: dict):
     try:
         validation_result = pystac.validation.validate(dummy_item)
     except pystac.errors.STACValidationError as e:
-        return error_template(e), prettyJsonTemplate(d)
-
-    return prettyJsonTemplate(d)
+        return error_template(e), prettyJsonTemplate(session['result_d'])
+    return prettyJsonTemplate(session['result_d'])
 
 serve()
