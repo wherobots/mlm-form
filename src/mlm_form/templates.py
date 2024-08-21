@@ -12,7 +12,7 @@ def inputTemplate(label, name, val, error_msg=None, input_type='text', canValida
     return Div(hx_target='this', hx_swap='outerHTML', cls=f"{error_msg if error_msg else 'Valid'}", style=control_container_style)(
                labelDecoratorTemplate(Label(label), name in model_required_keys),
                Input(name=name,type=input_type,value=f'{val}',hx_post=f'/{name.lower()}' if canValidateInline else None, style=text_input_style),
-               Div(f'{error_msg}', style='color: red;') if error_msg else None)
+               error_template(f'{error_msg}') if error_msg else None)
 
 def inputListTemplate(label, name, values=[None, None, None, None], error_msg=None, input_type='number'):
     return Div(hx_target='this', hx_swap='outerHTML', cls=f"{error_msg if error_msg else 'Valid'}", style=control_container_style)(
@@ -25,7 +25,7 @@ def inputListTemplate(label, name, values=[None, None, None, None], error_msg=No
                 for i, val in enumerate(values)
             ]
         ),
-        Div(f'{error_msg}', style='color: red;') if error_msg else None
+        error_template(f'{error_msg}') if error_msg else None
     )
 
 def mk_opts(nm, cs):
@@ -46,7 +46,7 @@ def selectEnumTemplate(label, options, name, error_msg=None, canValidateInline=T
             name=name,
             hx_post=f'/{name.lower()}' if canValidateInline else None,
             style=select_input_style),
-        Div(f'{error_msg}', style='color: red;') if error_msg else None)
+        error_template(f'{error_msg}') if error_msg else None)
 
 def selectCheckboxTemplate(label, options, name, error_msg=None, canValidateInline=True):
     return Div(hx_target='this', hx_swap='outerHTML', cls=f"{error_msg if error_msg else 'Valid'}", style=control_container_style)(
@@ -55,7 +55,7 @@ def selectCheckboxTemplate(label, options, name, error_msg=None, canValidateInli
             mk_checkbox(options),
             name=name,
             hx_post=f'/{name.lower()}' if canValidateInline else None),
-        Div(f'{error_msg}', style='color: red;') if error_msg else None)
+        error_template(f'{error_msg}') if error_msg else None)
 
 def trueFalseRadioTemplate(label, name, error_msg=None):
     return Div(
@@ -67,7 +67,7 @@ def trueFalseRadioTemplate(label, name, error_msg=None):
             Label("False", for_=name),
             style="display: flex; flex-direction: row; align-items: center;"
         ),
-        Div(f'{error_msg}', style='color: red;') if error_msg else None,
+        error_template(f'{error_msg}') if error_msg else None,
         style=f'{control_container_style} margin-bottom: 15px;'
     )
 
@@ -135,7 +135,7 @@ def modelInputTemplate(label, name, error_msg=None):
             Label("Pre Processing Function"),
             Input(type="text", name=f"{name}[pre_processing_function]", style=text_input_style),
         ),
-        Div(f'{error_msg}', style='color: red;') if error_msg else None,
+        error_template(f'{error_msg}') if error_msg else None,
         style=f'{control_container_style} margin-left: 30px;'
     )
 
@@ -155,3 +155,6 @@ def outputTemplate(id):
 
 def prettyJsonTemplate(obj):
     return Pre(json.dumps(obj, indent = 4), style="margin-top: 25px; width: 100%;")
+    
+def error_template(msg):
+    return  Div(msg, style='color: red; white-space: pre-wrap; margin-left: 10px; margin-bottom: 15px; text-indent: -10px;')

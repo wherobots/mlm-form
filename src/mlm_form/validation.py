@@ -29,7 +29,7 @@ def create_validation_function(model_class, field_name, user_friendly_message):
     def validation_function(value):
         error = validate_single_field(model_class, field_name, value)
         if error:
-            return f"{user_friendly_message} {error}"
+            return f'{user_friendly_message}\n{error}'
         return None
     return validation_function
 
@@ -40,7 +40,11 @@ def validate_single_field(model_class, field_name, value):
         adapter.validate_python(value)
         return None  # Return None if validation passes
     except ValidationError as e:
-        return f"Error for field '{field_name}': {e}"  # Return error message if validation fails
+        return humanize_validation_error(e)  # Return error message if validation fails
+
+def humanize_validation_error(validation_error):
+    messages = [e['msg'] for e in validation_error.errors()]
+    return '\n'.join(list(dict.fromkeys(messages)))
 
 # Validation functions generated using the factory function
 

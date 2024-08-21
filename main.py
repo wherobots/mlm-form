@@ -119,7 +119,7 @@ def submit(d: dict):
 
         errors = {k: v for k, v in errors.items() if v is not None}
 
-        return *[Div(error, style='color: red;') for error in errors.values()], prettyJsonTemplate(d)
+        return *[error_template(error) for error in errors.values()], prettyJsonTemplate(d)
 
     return Div("Please fill in all required fields before submitting.", style='color: red;'), prettyJsonTemplate(d)
 
@@ -173,7 +173,7 @@ def submit_asset(d: dict):
     try:
         validation_result = pystac.validation.validate(dummy_item)
     except pystac.errors.STACValidationError as e:
-        return Div(e, style='color: red;'), prettyJsonTemplate(d)
+        return error_template(e), prettyJsonTemplate(d)
     
     return prettyJsonTemplate(d)
 
