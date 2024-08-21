@@ -3,6 +3,7 @@ from fasthtml.common import *
 from src.mlm_form.styles import *
 from src.mlm_form.templates import *
 from src.mlm_form.validation import *
+from src.mlm_form.make_item import *
 from stac_model.base import TaskEnum
 from stac_model.runtime import AcceleratorEnum
 from datetime import datetime
@@ -32,10 +33,10 @@ def homepage():
                     inputTemplate(label="Pretrained source", name="pretrained_source", val='', input_type='text'),
                     inputTemplate(label="Batch size suggestion", name="batch_size_suggestion", val='', input_type='number'),
                     selectEnumTemplate(
-                        label="Accelerator", 
-                        options=[task.value for task in AcceleratorEnum], 
-                        name="accelerator", 
-                        error_msg=None, 
+                        label="Accelerator",
+                        options=[task.value for task in AcceleratorEnum],
+                        name="accelerator",
+                        error_msg=None,
                         canValidateInline=False
                     ),
                     trueFalseRadioTemplate(label="Accelerator constrained", name="accelerator_constrained"),
@@ -97,8 +98,8 @@ def check_total_parameters(total_parameters: int | None):
 
 @app.post('/submit')
 def submit(d: dict):
+
     d['shape'] = [int(d.pop(f'shape_{i+1}')) if d.get(f'shape_{i+1}') else d.pop(f'shape_{i+1}') for i in range(4)]
-    [task.value for task in TaskEnum]
     # from the fasthtml discord https://discordapp.com/channels/689892369998676007/1247700012952191049/1273789690691981412
     # this might change past version 0.4.4 it seems pretty hacky
     d['tasks'] = [task for task in tasks if d.pop(task, None)]
@@ -155,7 +156,7 @@ def asset_homepage():
 @app.post('/submit_asset')
 def submit_asset(d: dict):
     d['roles'] = model_asset_implicit_roles + [role for role in roles if d.pop(role, None)]
-    # pystac doesn't directly support validating an asset, so put the asset inside a 
+    # pystac doesn't directly support validating an asset, so put the asset inside a
     # dummy item and run the validation on that
     dummy_item = pystac.Item(
         id="example-item",
@@ -174,7 +175,7 @@ def submit_asset(d: dict):
         validation_result = pystac.validation.validate(dummy_item)
     except pystac.errors.STACValidationError as e:
         return error_template(e), prettyJsonTemplate(d)
-    
+
     return prettyJsonTemplate(d)
 
 serve()
