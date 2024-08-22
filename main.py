@@ -27,7 +27,7 @@ def homepage():
             ),
             Grid(
                 Form(hx_post='/submit', hx_target='#result', hx_trigger="input delay:200ms")(
-                    inputTemplate(label="Model Name", name="model_name", val='', input_type='text'),
+                    inputTemplate(label="Model Name", name="name", val='', input_type='text'),
                     inputTemplate(label="Architecture", name="architecture", val='', input_type='text'),
                     selectCheckboxTemplate(label="Tasks", options=tasks, name="tasks", canValidateInline=False),
                     inputTemplate(label="Framework", name="framework", val='', input_type='text'),
@@ -47,10 +47,9 @@ def homepage():
                     trueFalseRadioTemplate(label="Accelerator constrained", name="accelerator_constrained"),
                     inputTemplate(label="Accelerator Summary", name="accelerator_summary", val='', input_type='text'),
                     inputTemplate(label="Accelerator Count", name="accelerator_count", val='', input_type='number'),
-                    modelInputTemplate(label="MLM Input", name="mlm_input"),
-                    inputTemplate(label="MLM Output", name="mlm_output", val='', input_type='text'),
+                    modelInputTemplate(label="MLM Input", name="mlm:input"),
+                    inputTemplate(label="MLM Output", name="output", val='', input_type='text'),
                     inputTemplate(label="MLM hyperparameters", name="hyperparameters", val='', input_type='text'),
-                    inputListTemplate(label="Shape", name="shape", error_msg=None, input_type='number'),
                 ),
                 outputTemplate('result')
             ),
@@ -65,7 +64,7 @@ def check_shape(shape_1: int | None, shape_2: int | None, shape_3: int | None, s
     shape = [shape_1, shape_2, shape_3, shape_4]
     return inputListTemplate('Shape', 'shape', shape, validate_shape(shape))
 
-@app.post('/model_name')
+@app.post('/name')
 def check_model_name(model_name: str | None):
     return inputTemplate("Model Name", "model_name", model_name, validate_model_name(model_name))
 
@@ -105,6 +104,7 @@ def check_total_parameters(total_parameters: int | None):
 def submit(session, d: dict):
     session.setdefault('result_d', {})
     d['shape'] = [int(d.pop(f'shape_{i+1}')) if d.get(f'shape_{i+1}') else d.pop(f'shape_{i+1}') for i in range(4)]
+    d['dim_order'] = [int(d.pop(f'dim_order_{i+1}')) if d.get(f'dim_order_{i+1}') else d.pop(f'dim_order_{i+1}') for i in range(4)]
     # from the fasthtml discord https://discordapp.com/channels/689892369998676007/1247700012952191049/1273789690691981412
     # this might change past version 0.4.4 it seems pretty hacky
     d['tasks'] = [task for task in tasks if d.pop(task, None)]

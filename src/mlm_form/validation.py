@@ -12,17 +12,11 @@ model_asset_artifact_types = ['torch.save', 'torch.jit.script', 'torch.export', 
 # be aware of both the schema and key name that it's operating on.
 # in practice, model assets don't have any required keys so this works fine.
 model_required_keys = [
-    'shape',
-    'model_name',
-    'architecture',
+    'name',
     'framework',
     'framework_version',
     'accelerator',
-    'accelerator_summary',
-    'file_size',
-    'memory_size',
-    'pretrained_source',
-    'total_parameters'
+    'mlm:input',
 ]
 
 def create_validation_function(model_class, field_name, user_friendly_message):
