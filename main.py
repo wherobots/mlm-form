@@ -12,21 +12,10 @@ import pystac
 app, rt = fast_app(hdrs=(picolink))
 tasks = [task.value for task in TaskEnum]
 
+
 @app.get('/')
-def homepage():
-    return Body(
-        Main(
-            Header(
-                H1("Machine Learning Model Metadata Form"),
-                Nav(
-                    A("Asset Form", href="/asset")
-                )
-            ),
-            Section(
-                P("Please complete all fields below to describe the machine learning model metadata.")
-            ),
-            Grid(
-                Form(hx_post='/submit', hx_target='#result', hx_trigger="input delay:200ms")(
+def homepage(session):
+    session_form = Form(hx_post='/submit', hx_target='#result', hx_trigger="input delay:200ms")(
                     inputTemplate(label="Model Name", name="name", val='', input_type='text'),
                     inputTemplate(label="Architecture", name="architecture", val='', input_type='text'),
                     selectCheckboxTemplate(label="Tasks", options=tasks, name="tasks", canValidateInline=False),
@@ -50,7 +39,20 @@ def homepage():
                     modelInputTemplate(label="MLM Input", name="mlm:input"),
                     inputTemplate(label="MLM Output", name="output", val='', input_type='text'),
                     inputTemplate(label="MLM hyperparameters", name="hyperparameters", val='', input_type='text'),
-                ),
+                )
+    return Body(
+        Main(
+            Header(
+                H1("Machine Learning Model Metadata Form"),
+                Nav(
+                    A("Asset Form", href="/asset")
+                )
+            ),
+            Section(
+                P("Please complete all fields below to describe the machine learning model metadata.")
+            ),
+            Grid(
+                fill_form(session_form, session.get('result_d', {})),
                 outputTemplate('result')
             ),
             style=main_element_style
@@ -131,7 +133,19 @@ def submit(session, d: dict):
 roles = [role for role in model_asset_roles if role not in model_asset_implicit_roles]
 
 @app.get('/asset')
-def asset_homepage():
+def asset_homepage(session):
+    session_form = Form(hx_post='/submit_asset', hx_target='#result', hx_trigger="input delay:200ms")(
+                    inputTemplate(label="Title", name="title", val='', input_type='text', canValidateInline=False),
+                    inputTemplate(label="URI", name="href", val='', input_type='text', canValidateInline=False),
+                    inputTemplate(label="Media Type", name="type", val='', input_type='text', canValidateInline=False),
+                    selectCheckboxTemplate(label="Roles", options=roles, name="roles", canValidateInline=False),
+                    selectEnumTemplate(
+                        label="Artifact Type",
+                        options=model_asset_artifact_types,
+                        name="mlm:artifact_type",
+                        canValidateInline=False
+                    ),
+                )
     return Body(
         Main(
             Header(
@@ -144,18 +158,7 @@ def asset_homepage():
                 P("Please complete all fields below to describe the machine learning model asset.")
             ),
             Grid(
-                Form(hx_post='/submit_asset', hx_target='#result', hx_trigger="input delay:200ms")(
-                    inputTemplate(label="Title", name="title", val='', input_type='text', canValidateInline=False),
-                    inputTemplate(label="URI", name="href", val='', input_type='text', canValidateInline=False),
-                    inputTemplate(label="Media Type", name="type", val='', input_type='text', canValidateInline=False),
-                    selectCheckboxTemplate(label="Roles", options=roles, name="roles", canValidateInline=False),
-                    selectEnumTemplate(
-                        label="Artifact Type",
-                        options=model_asset_artifact_types,
-                        name="mlm:artifact_type",
-                        canValidateInline=False
-                    ),
-                ),
+                fill_form(session_form, session.get('result_d', {})),
                 outputTemplate('result')
             ),
             style=main_element_style
