@@ -27,7 +27,7 @@ def homepage(session):
                        style="margin-top: 20px;", hx_target="#result", hx_swap="innerHTML")
             ),
             Grid(
-                session_form(session),
+                session_form(session, submitOnLoad=True),
                 outputTemplate('result')
             ),
             style=main_element_style
@@ -127,8 +127,13 @@ roles = [role for role in model_asset_roles if role not in model_asset_implicit_
 # helper function to render out the session form
 # because of the `hx_swap_oob`, this snippet can be returned by any handler and will update the form
 # see https://htmx.org/examples/update-other-content/#oob
-def session_form(session):
-    session_form = Form(hx_post='/submit', hx_target='#result', hx_trigger="input delay:200ms", id="session_form", hx_swap_oob="#session_form")(
+#
+# `submitOnLoad` should be set to true for the initial page load so that the form will
+# auto-submit to populate the results if there is saved state in the session
+def session_form(session, submitOnLoad=False):
+    result = session.get('result_d', {})
+    trigger = "input delay:200ms, load" if submitOnLoad and result else "input delay:200ms"
+    session_form = Form(hx_post='/submit', hx_target='#result', hx_trigger=trigger, id="session_form", hx_swap_oob="#session_form")(
                     inputTemplate(label="Model Name", name="model_name", val='', input_type='text'),
                     inputTemplate(label="Architecture", name="architecture", val='', input_type='text'),
                     selectCheckboxTemplate(label="Tasks", options=tasks, name="tasks", canValidateInline=False),
@@ -153,7 +158,7 @@ def session_form(session):
                     modelInputTemplate(label="MLM Input", name="mlm_input"),
                     modelOutputTemplate(label="MLM Output", name="mlm_output"),
                 )
-    fill_form(session_form, session.get('result_d', {}))
+    fill_form(session_form, result)
     return session_form
 
 @app.get('/asset')
