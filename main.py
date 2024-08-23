@@ -3,6 +3,7 @@ from fasthtml.common import *
 from src.mlm_form.styles import *
 from src.mlm_form.templates import *
 from src.mlm_form.validation import *
+from src.mlm_form.make_item import *
 from stac_model.base import TaskEnum
 from stac_model.runtime import AcceleratorEnum
 from datetime import datetime
@@ -11,16 +12,10 @@ import pystac
 app, rt = fast_app(hdrs=(picolink))
 tasks = [task.value for task in TaskEnum]
 
+
 @app.get('/')
-def homepage():
-    return Body(
-        Main(
-            Section(
-                H2("Machine Learning Model Metadata Form"),
-                P("Please complete all fields below to describe the machine learning model metadata.")
-            ),
-            Grid(
-                Form(hx_post='/submit', hx_target='#result', hx_trigger="input delay:200ms")(
+def homepage(session):
+    session_form = Form(hx_post='/submit', hx_target='#result', hx_trigger="input delay:200ms")(
                     inputTemplate(label="Model Name", name="model_name", val='', input_type='text'),
                     inputTemplate(label="Architecture", name="architecture", val='', input_type='text'),
                     selectCheckboxTemplate(label="Tasks", options=tasks, name="tasks", canValidateInline=False),
@@ -32,25 +27,46 @@ def homepage():
                     inputTemplate(label="Pretrained source", name="pretrained_source", val='', input_type='text'),
                     inputTemplate(label="Batch size suggestion", name="batch_size_suggestion", val='', input_type='number'),
                     selectEnumTemplate(
-                        label="Accelerator", 
-                        options=[task.value for task in AcceleratorEnum], 
-                        name="accelerator", 
-                        error_msg=None, 
+                        label="Accelerator",
+                        options=[task.value for task in AcceleratorEnum],
+                        name="accelerator",
+                        error_msg=None,
                         canValidateInline=False
                     ),
                     trueFalseRadioTemplate(label="Accelerator constrained", name="accelerator_constrained"),
                     inputTemplate(label="Accelerator Summary", name="accelerator_summary", val='', input_type='text'),
                     inputTemplate(label="Accelerator Count", name="accelerator_count", val='', input_type='number'),
-                    modelInputTemplate(label="MLM Input", name="mlm_input"),
-                    inputTemplate(label="MLM Output", name="mlm_output", val='', input_type='text'),
+                    modelInputTemplate(label="MLM Input", name="mlm:input"),
+                    inputTemplate(label="MLM Output", name="output", val='', input_type='text'),
                     inputTemplate(label="MLM hyperparameters", name="hyperparameters", val='', input_type='text'),
-                    inputListTemplate(label="Shape", name="shape", error_msg=None, input_type='number'),
-                ),
+                )
+    fill_form(session_form, session.get('result_d', {}))
+    return Body(
+        Main(
+            Header(
+                H1("Machine Learning Model Metadata Form"),
+                Nav(
+                    A("Asset Form", href="/asset")
+                )
+            ),
+            Section(
+                P("Please complete all fields below to describe the machine learning model metadata."),
+                Button("Clear Form", hx_post='/clear_form',
+                       style="margin-top: 20px;", hx_target="#result", hx_swap="innerHTML")
+            ),
+            Grid(
+                session_form,
                 outputTemplate('result')
             ),
             style=main_element_style
         )
     )
+
+@app.post('/clear_form')
+def clear_form(session):
+    session.clear()
+    return """Form JSON cleared. Continue editing to pick up where you 
+    left off or refresh the page to clear the form fields and start a new form."""
 
 ### Field Validation Routing ###
 
@@ -96,12 +112,14 @@ def check_total_parameters(total_parameters: int | None):
     return inputTemplate("Total Parameters", "total_parameters", total_parameters, validate_total_parameters(total_parameters))
 
 @app.post('/submit')
-def submit(d: dict):
+def submit(session, d: dict):
+    session.setdefault('result_d', {})
     d['shape'] = [int(d.pop(f'shape_{i+1}')) if d.get(f'shape_{i+1}') else d.pop(f'shape_{i+1}') for i in range(4)]
-    [task.value for task in TaskEnum]
+    d['dim_order'] = [int(d.pop(f'dim_order_{i+1}')) if d.get(f'dim_order_{i+1}') else d.pop(f'dim_order_{i+1}') for i in range(4)]
     # from the fasthtml discord https://discordapp.com/channels/689892369998676007/1247700012952191049/1273789690691981412
     # this might change past version 0.4.4 it seems pretty hacky
     d['tasks'] = [task for task in tasks if d.pop(task, None)]
+    session['result_d'].update(d)
     if all(d.get(key) != '' for key in model_required_keys):
         errors = {
             'shape': validate_shape(d['shape']),
@@ -118,23 +136,14 @@ def submit(d: dict):
         }
 
         errors = {k: v for k, v in errors.items() if v is not None}
-
-        return *[error_template(error) for error in errors.values()], prettyJsonTemplate(d)
-
-    return Div("Please fill in all required fields before submitting.", style='color: red;'), prettyJsonTemplate(d)
+        return *[error_template(error) for error in errors.values()], prettyJsonTemplate(session['result_d'])
+    return Div("Please fill in all required fields before submitting.", style='color: red;'), prettyJsonTemplate(session['result_d'])
 
 roles = [role for role in model_asset_roles if role not in model_asset_implicit_roles]
 
 @app.get('/asset')
-def asset_homepage():
-    return Body(
-        Main(
-            Section(
-                H2("Machine Learning Model Asset Form"),
-                P("Please complete all fields below to describe the machine learning model asset.")
-            ),
-            Grid(
-                Form(hx_post='/submit_asset', hx_target='#result', hx_trigger="input delay:200ms")(
+def asset_homepage(session):
+    session_form = Form(hx_post='/submit_asset', hx_target='#result', hx_trigger="input delay:200ms")(
                     inputTemplate(label="Title", name="title", val='', input_type='text', canValidateInline=False),
                     inputTemplate(label="URI", name="href", val='', input_type='text', canValidateInline=False),
                     inputTemplate(label="Media Type", name="type", val='', input_type='text', canValidateInline=False),
@@ -145,7 +154,21 @@ def asset_homepage():
                         name="mlm:artifact_type",
                         canValidateInline=False
                     ),
-                ),
+                )
+    fill_form(session_form, session.get('result_d', {}))
+    return Body(
+        Main(
+            Header(
+                H1("Machine Learning Model Metadata Form"),
+                Nav(
+                    A("MLM Form", href="/")
+                )
+            ),
+            Section(
+                P("Please complete all fields below to describe the machine learning model asset.")
+            ),
+            Grid(
+                session_form,
                 outputTemplate('result')
             ),
             style=main_element_style
@@ -153,9 +176,12 @@ def asset_homepage():
     )
 
 @app.post('/submit_asset')
-def submit_asset(d: dict):
+def submit_asset(session, d: dict):
+    session.setdefault('result_d', {})
     d['roles'] = model_asset_implicit_roles + [role for role in roles if d.pop(role, None)]
-    # pystac doesn't directly support validating an asset, so put the asset inside a 
+    session['result_d']['assets']= {}
+    session['result_d']['assets'].update(d)
+    # pystac doesn't directly support validating an asset, so put the asset inside a
     # dummy item and run the validation on that
     dummy_item = pystac.Item(
         id="example-item",
@@ -173,8 +199,7 @@ def submit_asset(d: dict):
     try:
         validation_result = pystac.validation.validate(dummy_item)
     except pystac.errors.STACValidationError as e:
-        return error_template(e), prettyJsonTemplate(d)
-    
-    return prettyJsonTemplate(d)
+        return error_template(e), prettyJsonTemplate(session['result_d'])
+    return prettyJsonTemplate(session['result_d'])
 
 serve()
