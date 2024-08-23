@@ -51,7 +51,8 @@ def homepage(session):
             ),
             Section(
                 P("Please complete all fields below to describe the machine learning model metadata."),
-                Button("Clear Form", hx_post='/clear_form', style="margin-top: 20px;")
+                Button("Clear Form", hx_post='/clear_form',
+                       style="margin-top: 20px;", hx_target="#result", hx_swap="innerHTML")
             ),
             Grid(
                 session_form,
@@ -64,7 +65,8 @@ def homepage(session):
 @app.post('/clear_form')
 def clear_form(session):
     session.clear()
-    return "Session Cleared"
+    return """Form JSON cleared. Continue editing to pick up where you 
+    left off or refresh the page to clear the form fields and start a new form."""
 
 ### Field Validation Routing ###
 
