@@ -16,7 +16,7 @@ tasks = [task.value for task in TaskEnum]
 @app.get('/')
 def homepage(session):
     session_form = Form(hx_post='/submit', hx_target='#result', hx_trigger="input delay:200ms")(
-                    inputTemplate(label="Model Name", name="name", val='', input_type='text'),
+                    inputTemplate(label="Model Name", name="model_name", val='', input_type='text'),
                     inputTemplate(label="Architecture", name="architecture", val='', input_type='text'),
                     selectCheckboxTemplate(label="Tasks", options=tasks, name="tasks", canValidateInline=False),
                     inputTemplate(label="Framework", name="framework", val='', input_type='text'),
@@ -40,6 +40,7 @@ def homepage(session):
                     inputTemplate(label="MLM Output", name="output", val='', input_type='text'),
                     inputTemplate(label="MLM hyperparameters", name="hyperparameters", val='', input_type='text'),
                 )
+    fill_form(session_form, session.get('result_d', {}))
     return Body(
         Main(
             Header(
@@ -49,15 +50,21 @@ def homepage(session):
                 )
             ),
             Section(
-                P("Please complete all fields below to describe the machine learning model metadata.")
+                P("Please complete all fields below to describe the machine learning model metadata."),
+                Button("Clear Form", hx_post='/clear_form', style="margin-top: 20px;")
             ),
             Grid(
-                fill_form(session_form, session.get('result_d', {})),
+                session_form,
                 outputTemplate('result')
             ),
             style=main_element_style
         )
     )
+
+@app.post('/clear_form')
+def clear_form(session):
+    session.clear()
+    return "Session Cleared"
 
 ### Field Validation Routing ###
 
@@ -66,7 +73,7 @@ def check_shape(shape_1: int | None, shape_2: int | None, shape_3: int | None, s
     shape = [shape_1, shape_2, shape_3, shape_4]
     return inputListTemplate('Shape', 'shape', shape, validate_shape(shape))
 
-@app.post('/name')
+@app.post('/model_name')
 def check_model_name(model_name: str | None):
     return inputTemplate("Model Name", "model_name", model_name, validate_model_name(model_name))
 
@@ -146,6 +153,7 @@ def asset_homepage(session):
                         canValidateInline=False
                     ),
                 )
+    fill_form(session_form, session.get('result_d', {}))
     return Body(
         Main(
             Header(
@@ -158,7 +166,7 @@ def asset_homepage(session):
                 P("Please complete all fields below to describe the machine learning model asset.")
             ),
             Grid(
-                fill_form(session_form, session.get('result_d', {})),
+                session_form,
                 outputTemplate('result')
             ),
             style=main_element_style

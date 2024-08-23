@@ -123,9 +123,9 @@ def labelDecoratorTemplate(label, isRequired):
         style="display: flex;"
     )
 
-def outputTemplate(id):
+def outputTemplate(session_result_d):
     return Div(
-        Div(id=id, style="position: fixed; right: 50px; width: 500px;"),
+        Div(id="result", style="position: fixed; right: 50px; width: 500px; height: calc(100vh - 150px); overflow: auto;"),
         style="position: relative;"
     )
 
