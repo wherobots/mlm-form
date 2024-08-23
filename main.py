@@ -12,32 +12,7 @@ app, rt = fast_app(hdrs=(picolink))
 
 @app.get('/')
 def homepage(session):
-    session_form = Form(hx_post='/submit', hx_target='#result', hx_trigger="input delay:200ms")(
-                    inputTemplate(label="Model Name", name="model_name", val='', input_type='text'),
-                    inputTemplate(label="Architecture", name="architecture", val='', input_type='text'),
-                    selectCheckboxTemplate(label="Tasks", options=tasks, name="tasks", canValidateInline=False),
-                    inputTemplate(label="Framework", name="framework", val='', input_type='text'),
-                    inputTemplate(label="Framework Version", name="framework_version", val='', input_type='text'),
-                    inputTemplate(label="Memory Size", name="memory_size", val='', input_type='number'),
-                    inputTemplate(label="Total Parameters", name="total_parameters", val='', input_type='number'),
-                    inputTemplate(label="Is it pretrained?", name="pretrained", val='', input_type='boolean'),
-                    inputTemplate(label="Pretrained source", name="pretrained_source", val='', input_type='text'),
-                    inputTemplate(label="Batch size suggestion", name="batch_size_suggestion", val='', input_type='number'),
-                    selectEnumTemplate(
-                        label="Accelerator",
-                        options=[task.value for task in AcceleratorEnum],
-                        name="accelerator",
-                        error_msg=None,
-                        canValidateInline=False
-                    ),
-                    trueFalseRadioTemplate(label="Accelerator constrained", name="accelerator_constrained"),
-                    inputTemplate(label="Accelerator Summary", name="accelerator_summary", val='', input_type='text'),
-                    inputTemplate(label="Accelerator Count", name="accelerator_count", val='', input_type='number'),
-                    inputTemplate(label="MLM hyperparameters", name="hyperparameters", val='', input_type='text'),
-                    modelInputTemplate(label="MLM Input", name="mlm_input"),
-                    modelOutputTemplate(label="MLM Output", name="mlm_output"),
-                )
-    fill_form(session_form, session.get('result_d', {}))
+    
     return Body(
         Main(
             Header(
@@ -52,7 +27,7 @@ def homepage(session):
                        style="margin-top: 20px;", hx_target="#result", hx_swap="innerHTML")
             ),
             Grid(
-                session_form,
+                session_form(session),
                 outputTemplate('result')
             ),
             style=main_element_style
@@ -63,7 +38,7 @@ def homepage(session):
 def clear_form(session):
     session.clear()
     return """Form JSON cleared. Continue editing to pick up where you 
-    left off or refresh the page to clear the form fields and start a new form."""
+    left off or refresh the page to clear the form fields and start a new form.""", session_form(session)
 
 ### Field Validation Routing ###
 
@@ -148,6 +123,38 @@ def submit(session, d: dict):
     return Div("Please fill in all required fields before submitting.", style='color: red;'), prettyJsonTemplate(session['result_d'])
 
 roles = [role for role in model_asset_roles if role not in model_asset_implicit_roles]
+
+# helper function to render out the session form
+# because of the `hx_swap_oob`, this snippet can be returned by any handler and will update the form
+# see https://htmx.org/examples/update-other-content/#oob
+def session_form(session):
+    session_form = Form(hx_post='/submit', hx_target='#result', hx_trigger="input delay:200ms", id="session_form", hx_swap_oob="#session_form")(
+                    inputTemplate(label="Model Name", name="model_name", val='', input_type='text'),
+                    inputTemplate(label="Architecture", name="architecture", val='', input_type='text'),
+                    selectCheckboxTemplate(label="Tasks", options=tasks, name="tasks", canValidateInline=False),
+                    inputTemplate(label="Framework", name="framework", val='', input_type='text'),
+                    inputTemplate(label="Framework Version", name="framework_version", val='', input_type='text'),
+                    inputTemplate(label="Memory Size", name="memory_size", val='', input_type='number'),
+                    inputTemplate(label="Total Parameters", name="total_parameters", val='', input_type='number'),
+                    inputTemplate(label="Is it pretrained?", name="pretrained", val='', input_type='boolean'),
+                    inputTemplate(label="Pretrained source", name="pretrained_source", val='', input_type='text'),
+                    inputTemplate(label="Batch size suggestion", name="batch_size_suggestion", val='', input_type='number'),
+                    selectEnumTemplate(
+                        label="Accelerator",
+                        options=[task.value for task in AcceleratorEnum],
+                        name="accelerator",
+                        error_msg=None,
+                        canValidateInline=False
+                    ),
+                    trueFalseRadioTemplate(label="Accelerator constrained", name="accelerator_constrained"),
+                    inputTemplate(label="Accelerator Summary", name="accelerator_summary", val='', input_type='text'),
+                    inputTemplate(label="Accelerator Count", name="accelerator_count", val='', input_type='number'),
+                    inputTemplate(label="MLM hyperparameters", name="hyperparameters", val='', input_type='text'),
+                    modelInputTemplate(label="MLM Input", name="mlm_input"),
+                    modelOutputTemplate(label="MLM Output", name="mlm_output"),
+                )
+    fill_form(session_form, session.get('result_d', {}))
+    return session_form
 
 @app.get('/asset')
 def asset_homepage(session):
