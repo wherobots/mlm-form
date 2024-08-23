@@ -4,14 +4,11 @@ from src.mlm_form.styles import *
 from src.mlm_form.templates import *
 from src.mlm_form.validation import *
 from src.mlm_form.make_item import *
-from stac_model.base import TaskEnum
 from stac_model.runtime import AcceleratorEnum
 from datetime import datetime
 import pystac
 
 app, rt = fast_app(hdrs=(picolink))
-tasks = [task.value for task in TaskEnum]
-
 
 @app.get('/')
 def homepage(session):
@@ -36,9 +33,9 @@ def homepage(session):
                     trueFalseRadioTemplate(label="Accelerator constrained", name="accelerator_constrained"),
                     inputTemplate(label="Accelerator Summary", name="accelerator_summary", val='', input_type='text'),
                     inputTemplate(label="Accelerator Count", name="accelerator_count", val='', input_type='number'),
-                    modelInputTemplate(label="MLM Input", name="mlm:input"),
-                    inputTemplate(label="MLM Output", name="output", val='', input_type='text'),
                     inputTemplate(label="MLM hyperparameters", name="hyperparameters", val='', input_type='text'),
+                    modelInputTemplate(label="MLM Input", name="mlm_input"),
+                    modelOutputTemplate(label="MLM Output", name="mlm_output"),
                 )
     fill_form(session_form, session.get('result_d', {}))
     return Body(
@@ -70,7 +67,12 @@ def clear_form(session):
 
 ### Field Validation Routing ###
 
-@app.post('/shape')
+@app.post('/mlm_input_shape')
+def check_shape(shape_1: int | None, shape_2: int | None, shape_3: int | None, shape_4: int | None):
+    shape = [shape_1, shape_2, shape_3, shape_4]
+    return inputListTemplate('Shape', 'shape', shape, validate_shape(shape))
+
+@app.post('/mlm_output_shape')
 def check_shape(shape_1: int | None, shape_2: int | None, shape_3: int | None, shape_4: int | None):
     shape = [shape_1, shape_2, shape_3, shape_4]
     return inputListTemplate('Shape', 'shape', shape, validate_shape(shape))
@@ -114,15 +116,21 @@ def check_total_parameters(total_parameters: int | None):
 @app.post('/submit')
 def submit(session, d: dict):
     session.setdefault('result_d', {})
-    d['shape'] = [int(d.pop(f'shape_{i+1}')) if d.get(f'shape_{i+1}') else d.pop(f'shape_{i+1}') for i in range(4)]
-    d['dim_order'] = [int(d.pop(f'dim_order_{i+1}')) if d.get(f'dim_order_{i+1}') else d.pop(f'dim_order_{i+1}') for i in range(4)]
+    # this handles empty strings on submit and the fact that we have to manually collate list values
+    d['mlm_input_shape'] = [int(d.pop(f'mlm_input_shape_{i+1}')) if d.get(f'mlm_input_shape_{i+1}') else d.pop(f'mlm_input_shape_{i+1}') for i in range(4)]
+    d['mlm_output_shape'] = [int(d.pop(f'mlm_output_shape_{i+1}')) if d.get(f'mlm_output_shape_{i+1}') else d.pop(f'mlm_output_shape_{i+1}') for i in range(4)]
+    d['mlm_input_dim_order'] = [d.pop(f'mlm_input_dim_order_{i+1}') if d.get(f'mlm_input_dim_order_{i+1}') else d.pop(f'mlm_input_dim_order_{i+1}') for i in range(4)]
+    d['mlm_output_dim_order'] = [d.pop(f'mlm_output_dim_order_{i+1}') if d.get(f'mlm_output_dim_order_{i+1}') else d.pop(f'mlm_output_dim_order_{i+1}') for i in range(4)]
+    d['mlm_output_classes'] = [item.strip() for item in d.get('mlm_output_classes', '').split(',')]
     # from the fasthtml discord https://discordapp.com/channels/689892369998676007/1247700012952191049/1273789690691981412
     # this might change past version 0.4.4 it seems pretty hacky
     d['tasks'] = [task for task in tasks if d.pop(task, None)]
+    # d['mlm:output_tasks'] = [task for task in tasks if d.pop(task, None)]
     session['result_d'].update(d)
+    # TODO inline validation is incomplete
     if all(d.get(key) != '' for key in model_required_keys):
         errors = {
-            'shape': validate_shape(d['shape']),
+            'shape': validate_shape(d['mlm:input_shape']),
             'model_name': validate_model_name(d.get('model_name')),
             'architecture': validate_architecture(d.get('architecture')),
             'framework': validate_framework(d.get('framework')),
