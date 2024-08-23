@@ -5,10 +5,12 @@ from .styles import *
 from .validation import *
 from stac_model.input import NormalizeType, ResizeType
 from typing import get_args
+from stac_model.base import TaskEnum
 
  # idk what Typing.Literal is or why I need to do this :(
 normalize_type_values = [value for value in get_args(get_args(NormalizeType)[0])]
 resize_type_values = [value for value in get_args(get_args(ResizeType)[0])]
+tasks = [task.value for task in TaskEnum]
 ######################
 ### HTML Templates ###
 ######################
@@ -38,11 +40,6 @@ def mk_opts(nm, cs):
         Option(f'-- select {nm} --', disabled='', selected='', value=''),
         *map(Option, cs))
 
-def mk_checkbox(options):
-    return Div(style=control_container_style)(
-        *[Div(CheckboxX(id=option, label=option), style="width: 100%;") for option in options]
-    )
-
 def selectEnumTemplate(label, options, name, error_msg=None, canValidateInline=True):
     return Div(hx_target='this', hx_swap='outerHTML', cls=f"{error_msg if error_msg else 'Valid'}", style=control_container_style)(
         labelDecoratorTemplate(Label(label), name in model_required_keys),
@@ -52,6 +49,11 @@ def selectEnumTemplate(label, options, name, error_msg=None, canValidateInline=T
             hx_post=f'/{name.lower()}' if canValidateInline else None,
             style=select_input_style),
         Div(f'{error_msg}', style='color: red;') if error_msg else None)
+
+def mk_checkbox(options):
+    return Div(style=control_container_style)(
+        *[Div(CheckboxX(id=option, label=option), style="width: 100%;") for option in options]
+    )
 
 def selectCheckboxTemplate(label, options, name, error_msg=None, canValidateInline=True):
     return Div(hx_target='this', hx_swap='outerHTML', cls=f"{error_msg if error_msg else 'Valid'}", style=control_container_style)(
@@ -81,35 +83,70 @@ def modelInputTemplate(label, name, error_msg=None):
         labelDecoratorTemplate(H4(label, style="margin-left: -30px;"), name in model_required_keys),
         Div(
             Label("Name"),
-            Input(type="text", name=f"name", style=text_input_style)
+            Input(type="text", name=f"{name}_name", style=text_input_style)
         ),
         Div(
             Label("Bands"),
-            Input(type="text", name=f"bands", style=text_input_style),
+            Input(type="text", name=f"{name}_bands", style=text_input_style),
         ),
-        inputListTemplate(label="Shape", name="shape", error_msg=None, input_type='number'),
-        inputListTemplate(label="Dimension Order", name="dim_order", error_msg=None, input_type='text'),
-        Input(type="text", name=f"data_type", style=text_input_style),
+        inputListTemplate(label="Shape", name=f"{name}_shape", error_msg=None, input_type='number'),
+        inputListTemplate(label="Dimension Order", name=f"{name}_dim_order", error_msg=None, input_type='text'),
+        Div(
+            Label("Data Type"),
+        Input(type="text", name=f"{name}_data_type", style=text_input_style),
+        ),
         Div(
             Label("Norm by Channel"),
-            CheckboxX(name=f"norm_by_channel"),
+            CheckboxX(name=f"{name}_norm_by_channel"),
             style="margin-bottom: 15px;"
         ),
         selectEnumTemplate("Normalization Type", normalize_type_values,
-            f"norm_type", error_msg=None, canValidateInline=True),
+            f"{name}_norm_type", error_msg=None, canValidateInline=True),
         Div(
             Label("Norm Clip"),
-            Input(type="text", name=f"norm_clip", style=text_input_style),
+            Input(type="text", name=f"{name}_norm_clip", style=text_input_style),
         ),
         selectEnumTemplate("Resize Type", resize_type_values,
-            f"resize_type", error_msg=None, canValidateInline=True),
+            f"{name}_resize_type", error_msg=None, canValidateInline=True),
         Div(
             Label("Statistics"),
-            Input(type="text", name=f"statistics", style=text_input_style),
+            Input(type="text", name=f"{name}_statistics", style=text_input_style),
         ),
         Div(
             Label("Pre Processing Function"),
-            Input(type="text", name=f"pre_processing_function", style=text_input_style),
+            Input(type="text", name=f"{name}_pre_processing_function", style=text_input_style),
+        ),
+        Div(f'{error_msg}', style='color: red;') if error_msg else None,
+        style=f'{control_container_style} margin-left: 30px;'
+    )
+
+def mk_input(**kw): return Input(id="new-title", name="title", placeholder="New Todo", **kw)
+
+def modelOutputTemplate(label, name, error_msg=None):
+    return Div(
+        labelDecoratorTemplate(H4(label, style="margin-left: -30px;"), name in model_required_keys),
+        Div(
+            Label("Name"),
+            Input(type="text", name=f"{name}_name", style=text_input_style)
+        ),
+        # TODO disabling this because we only work with models tha accept single outputs for now but
+        # this should be flippe don and made working in the future
+        #selectCheckboxTemplate(label="Tasks", options=tasks, name=f"{name}_tasks", canValidateInline=False),
+        inputListTemplate(label="Shape", name=f"{name}_shape", error_msg=None, input_type='number'),
+        inputListTemplate(label="Dimension Order", name=f"{name}_dim_order", error_msg=None, input_type='text'),
+        Div(
+        Label("Data Type"),
+        Input(type="text", name=f"{name}_data_type", style=text_input_style),
+        ),
+        # TODO this should be made dynamic so that users can enter an N length list of classes similar to 
+        # https://gallery.fastht.ml/start_simple/sqlite_todo/code
+        Div(
+        Label("Categories (currently you must enter a single comma separated list of categories)"),
+        Input(type="text", name=f"{name}_classes", style=text_input_style),
+        ),
+        Div(
+            Label("Post Processing Function"),
+            Input(type="text", name=f"{name}_pre_processing_function", style=text_input_style),
         ),
         Div(f'{error_msg}', style='color: red;') if error_msg else None,
         style=f'{control_container_style} margin-left: 30px;'
@@ -125,7 +162,7 @@ def labelDecoratorTemplate(label, isRequired):
 
 def outputTemplate(session_result_d):
     return Div(
-        Div(id="result", style="position: fixed; right: 50px; width: 500px; height: calc(100vh - 150px); overflow: auto;"),
+        Div(id="result", style="position: fixed; right: 50px; width: 500px; height: calc(100vh - 250px); overflow: auto;"),
         style="position: relative;"
     )
 
