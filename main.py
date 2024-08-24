@@ -37,8 +37,7 @@ def homepage(session):
 @app.post('/clear_form')
 def clear_form(session):
     session.clear()
-    return """Form JSON cleared. Continue editing to pick up where you 
-    left off or refresh the page to clear the form fields and start a new form.""", session_form(session)
+    return session_form(session)
 
 ### Field Validation Routing ###
 
@@ -72,10 +71,6 @@ def check_framework_version(framework_version: str | None):
 def check_accelerator_summary(accelerator_summary: str | None):
     return inputTemplate("Accelerator Summary", "accelerator_summary", accelerator_summary, validate_accelerator_summary(accelerator_summary))
 
-@app.post('/file_size')
-def check_file_size(file_size: int | None):
-    return inputTemplate("File Size", "file_size", file_size, validate_file_size(file_size))
-
 @app.post('/memory_size')
 def check_memory_size(memory_size: int | None):
     return inputTemplate("Memory Size", "memory_size", memory_size, validate_memory_size(memory_size))
@@ -90,18 +85,26 @@ def check_total_parameters(total_parameters: int | None):
 
 @app.post('/submit')
 def submit(session, d: dict):
+    print(d)
     session.setdefault('result_d', {})
+    # TODO for some reason the enum and checkbox template don't set default empty values
+    d['mlm_input_norm_type'] = d.get('mlm_input_norm_type')
+    d['mlm_input_resize_type'] = d.get('mlm_input_resize_type')
+    d['accelerator'] = d.get('accelerator')
+    d['accelerator_constrained'] = d.get('accelerator_constrained')
     # this handles empty strings on submit and the fact that we have to manually collate list values
     d['mlm_input_shape'] = [int(d.pop(f'mlm_input_shape_{i+1}')) if d.get(f'mlm_input_shape_{i+1}') else d.pop(f'mlm_input_shape_{i+1}') for i in range(4)]
-    d['mlm_output_shape'] = [int(d.pop(f'mlm_output_shape_{i+1}')) if d.get(f'mlm_output_shape_{i+1}') else d.pop(f'mlm_output_shape_{i+1}') for i in range(4)]
     d['mlm_input_dim_order'] = [d.pop(f'mlm_input_dim_order_{i+1}') if d.get(f'mlm_input_dim_order_{i+1}') else d.pop(f'mlm_input_dim_order_{i+1}') for i in range(4)]
+    d['mlm_output_shape'] = [int(d.pop(f'mlm_output_shape_{i+1}')) if d.get(f'mlm_output_shape_{i+1}') else d.pop(f'mlm_output_shape_{i+1}') for i in range(4)]
     d['mlm_output_dim_order'] = [d.pop(f'mlm_output_dim_order_{i+1}') if d.get(f'mlm_output_dim_order_{i+1}') else d.pop(f'mlm_output_dim_order_{i+1}') for i in range(4)]
     d['mlm_output_classes'] = [item.strip() for item in d.get('mlm_output_classes', '').split(',')]
+    d['mlm_input_mean'] = [float(item.strip()) if item is not '' else None for item in d.get('mlm_input_mean', '').split(',')]
+    d['mlm_input_std'] = [float(item.strip()) if item is not '' else None for item in d.get('mlm_input_std', '').split(',')]
+
     # from the fasthtml discord https://discordapp.com/channels/689892369998676007/1247700012952191049/1273789690691981412
     # this might change past version 0.4.4 it seems pretty hacky
     d['tasks'] = [task for task in tasks if d.pop(task, None)]
     # d['mlm:output_tasks'] = [task for task in tasks if d.pop(task, None)]
-    session['result_d'].update(d)
     # TODO inline validation is incomplete
     if all(d.get(key) != '' for key in model_required_keys):
         errors = {
@@ -112,7 +115,6 @@ def submit(session, d: dict):
             'framework_version': validate_framework_version(d.get('framework_version')),
             'accelerator': validate_accelerator(d.get('accelerator')),
             'accelerator_summary': validate_accelerator_summary(d.get('accelerator_summary')),
-            'file_size': validate_file_size(d.get('file_size')),
             'memory_size': validate_memory_size(d.get('memory_size')),
             'pretrained_source': validate_pretrained_source(d.get('pretrained_source')),
             'total_parameters': validate_total_parameters(d.get('total_parameters')),
@@ -120,6 +122,12 @@ def submit(session, d: dict):
 
         errors = {k: v for k, v in errors.items() if v is not None}
         return *[error_template(error) for error in errors.values()], prettyJsonTemplate(session['result_d'])
+    # TODO this isn't set until the asset form is submitted
+    session['result_d']['assets'] = session['result_d'].get('assets')
+
+    ml_model_metadata = construct_ml_model_properties(d)
+    d = create_pystac_item(ml_model_metadata, session['result_d']['assets'])
+    session['result_d'].update(d)
     return Div("Please fill in all required fields before submitting.", style='color: red;'), prettyJsonTemplate(session['result_d'])
 
 roles = [role for role in model_asset_roles if role not in model_asset_implicit_roles]
@@ -139,7 +147,7 @@ def session_form(session, submitOnLoad=False):
                     selectCheckboxTemplate(label="Tasks", options=tasks, name="tasks", canValidateInline=False),
                     inputTemplate(label="Framework", name="framework", val='', input_type='text'),
                     inputTemplate(label="Framework Version", name="framework_version", val='', input_type='text'),
-                    inputTemplate(label="Memory Size", name="memory_size", val='', input_type='number'),
+                    inputTemplate(label="Memory Size", name="memory_size", val=0, input_type='number'),
                     inputTemplate(label="Total Parameters", name="total_parameters", val='', input_type='number'),
                     inputTemplate(label="Is it pretrained?", name="pretrained", val='', input_type='boolean'),
                     inputTemplate(label="Pretrained source", name="pretrained_source", val='', input_type='text'),

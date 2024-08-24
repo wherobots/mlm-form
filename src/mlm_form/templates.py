@@ -101,21 +101,28 @@ def modelInputTemplate(label, name, error_msg=None):
             style="margin-bottom: 15px;"
         ),
         selectEnumTemplate("Normalization Type", normalize_type_values,
-            f"{name}_norm_type", error_msg=None, canValidateInline=True),
+            f"{name}_norm_type", error_msg=None, canValidateInline=False),
         Div(
             Label("Norm Clip"),
             Input(type="text", name=f"{name}_norm_clip", style=text_input_style),
         ),
         selectEnumTemplate("Resize Type", resize_type_values,
             f"{name}_resize_type", error_msg=None, canValidateInline=True),
+        # TODO this should be made dynamic so that users can create a new field for a statistic and
+        # then enter an N length list of values for that statistic similar to 
+        # https://gallery.fastht.ml/start_simple/sqlite_todo/code
         Div(
-            Label("Statistics"),
-            Input(type="text", name=f"{name}_statistics", style=text_input_style),
+        Label("Mean Statistic (currently you must enter a single comma separated list of values)"),
+        Input(type="text", name=f"{name}_mean", style=text_input_style),
         ),
         Div(
-            Label("Pre Processing Function"),
-            Input(type="text", name=f"{name}_pre_processing_function", style=text_input_style),
+        Label("Std Statistic (currently you must enter a single comma separated list of values)"),
+        Input(type="text", name=f"{name}_std", style=text_input_style),
         ),
+        # Div(
+        #     Label("Pre Processing Function"),
+        #     Input(type="text", name=f"{name}_pre_processing_function", style=text_input_style),
+        # ),
         Div(f'{error_msg}', style='color: red;') if error_msg else None,
         style=f'{control_container_style} margin-left: 30px;'
     )
@@ -130,7 +137,7 @@ def modelOutputTemplate(label, name, error_msg=None):
             Input(type="text", name=f"{name}_name", style=text_input_style)
         ),
         # TODO disabling this because we only work with models tha accept single outputs for now but
-        # this should be flippe don and made working in the future
+        # this should be flipped on and made working in the future
         #selectCheckboxTemplate(label="Tasks", options=tasks, name=f"{name}_tasks", canValidateInline=False),
         inputListTemplate(label="Shape", name=f"{name}_shape", error_msg=None, input_type='number'),
         inputListTemplate(label="Dimension Order", name=f"{name}_dim_order", error_msg=None, input_type='text'),
@@ -144,10 +151,10 @@ def modelOutputTemplate(label, name, error_msg=None):
         Label("Categories (currently you must enter a single comma separated list of categories)"),
         Input(type="text", name=f"{name}_classes", style=text_input_style),
         ),
-        Div(
-            Label("Post Processing Function"),
-            Input(type="text", name=f"{name}_pre_processing_function", style=text_input_style),
-        ),
+        # Div(
+        #     Label("Post Processing Function"),
+        #     Input(type="text", name=f"{name}_pre_processing_function", style=text_input_style),
+        # ),
         Div(f'{error_msg}', style='color: red;') if error_msg else None,
         style=f'{control_container_style} margin-left: 30px;'
     )
