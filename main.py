@@ -105,7 +105,7 @@ def submit(session, d: dict):
     # TODO inline validation is incomplete
     if all(d.get(key) != '' for key in model_required_keys):
         errors = {
-            'shape': validate_shape(d['mlm:input_shape']),
+            'shape': validate_shape(d['mlm_input_shape']),
             'model_name': validate_model_name(d.get('model_name')),
             'architecture': validate_architecture(d.get('architecture')),
             'framework': validate_framework(d.get('framework')),
