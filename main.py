@@ -70,10 +70,6 @@ def check_framework_version(framework_version: str | None):
 def check_accelerator_summary(accelerator_summary: str | None):
     return inputTemplate("Accelerator Summary", "accelerator_summary", accelerator_summary, validate_accelerator_summary(accelerator_summary))
 
-@app.post('/file_size')
-def check_file_size(file_size: int | None):
-    return inputTemplate("File Size", "file_size", file_size, validate_file_size(file_size))
-
 @app.post('/memory_size')
 def check_memory_size(memory_size: int | None):
     return inputTemplate("Memory Size", "memory_size", memory_size, validate_memory_size(memory_size))
@@ -88,7 +84,6 @@ def check_total_parameters(total_parameters: int | None):
 
 @app.post('/submit')
 def submit(session, d: dict):
-    print(d)
     session.setdefault('result_d', {})
     # TODO for some reason the enum and checkbox template don't set default empty values
     d['mlm_input_norm_type'] = d.get('mlm_input_norm_type')
@@ -156,9 +151,13 @@ def session_form(session, submitOnLoad=False):
     fill_form(session_form, result)
     return session_form
 
-@app.get('/asset')
-def asset_homepage(session):
-    session_form = Form(hx_post='/submit_asset', hx_target='#result', hx_trigger="input delay:200ms")(
+def session_asset_form(session, submitOnLoad=False):
+    if session.get('result_d', {}).get('assets', {}):
+        result = session['result_d'].get('assets', {})
+    else:
+        result = {}
+    trigger = "input delay:200ms, load" if submitOnLoad and result else "input delay:200ms"
+    session_asset_form = Form(hx_post='/submit_asset', hx_target='#result', hx_trigger=trigger, id="session_asset_form", hx_swap_oob="#session_asset_form")(
                     inputTemplate(label="Title", name="title", val='', input_type='text', canValidateInline=False),
                     inputTemplate(label="URI", name="href", val='', input_type='text', canValidateInline=False),
                     inputTemplate(label="Media Type", name="media_type", val='', input_type='text', canValidateInline=False),
@@ -170,7 +169,11 @@ def asset_homepage(session):
                         canValidateInline=False
                     ),
                 )
-    fill_form(session_form, session.get('result_d', {}))
+    fill_form(session_asset_form, result)
+    return session_asset_form
+
+@app.get('/asset')
+def asset_homepage(session):
     return Body(
         Main(
             Header(
@@ -183,7 +186,7 @@ def asset_homepage(session):
                 P("Please complete all fields below to describe the machine learning model asset.")
             ),
             Grid(
-                session_form,
+                session_asset_form(session, submitOnLoad=True),
                 outputTemplate('result')
             ),
             style=main_element_style
