@@ -41,7 +41,6 @@ def humanize_validation_error(validation_error):
     return '\n'.join(list(dict.fromkeys(messages)))
 
 # Validation functions generated using the factory function
-
 validate_model_name = create_validation_function(MLModelProperties, "name", "Please enter a valid model name.")
 validate_architecture = create_validation_function(MLModelProperties, "architecture", "Please enter a valid model architecture.")
 validate_tasks = create_validation_function(MLModelProperties, "tasks", "Please enter a valid set of tasks.")

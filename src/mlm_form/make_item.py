@@ -113,6 +113,33 @@ def construct_ml_model_properties(d: Dict[str, Any]) -> MLModelProperties:
 
     return ml_model_meta
 
+def construct_assets(d: Dict[str, Any]) -> Dict[str, pystac.Asset]:
+    """Creates the assets for the STAC item.
+
+    This function takes the payload from the form input and constructs the
+    assets for the STAC item. The assets are the model file and any other
+    files that are needed to run the model.
+
+    Args:
+        d (Dict[str, Any]): The payload from the form with all item property info.
+
+    Returns:
+        Dict[str, pystac.Asset]: The assets for the STAC item.
+    """
+    assets = {}
+    required_keys = ['title', 'model_file', 'type', 'roles', 'mlm:artifact_type']
+    if d and all(key in d and d[key] is not None for key in required_keys):
+        # TODO correct mlm_ > mlm:
+        model_file = pystac.Asset(
+            title=d.get('title'),
+            href=d.get('model_file'),
+            media_type=d.get('type'),
+            roles=d.get('roles'),
+            extra_fields={"mlm_artifact_type": d.get('mlm:artifact_type'),}
+        )
+        assets["model"] = model_file
+    return assets
+
 def create_pystac_item(ml_model_meta: MLModelProperties, assets: Dict[str, pystac.Asset], self_href="./item.json") -> pystac.Item:
     """Creates stac item metadata and extends it with MLM specific properties.
 

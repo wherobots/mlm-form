@@ -3,7 +3,7 @@ from fasthtml.common import *
 from src.mlm_form.styles import *
 from src.mlm_form.templates import *
 from src.mlm_form.validation import *
-from src.mlm_form.make_item import *
+from src.mlm_form.make_item import construct_ml_model_properties, construct_assets, create_pystac_item
 from stac_model.runtime import AcceleratorEnum
 from datetime import datetime
 import pystac
@@ -39,7 +39,6 @@ def clear_form(session):
     session.clear()
     return session_form(session)
 
-### Field Validation Routing ###
 
 @app.post('/mlm_input_shape')
 def check_shape(shape_1: int | None, shape_2: int | None, shape_3: int | None, shape_4: int | None):
@@ -71,6 +70,10 @@ def check_framework_version(framework_version: str | None):
 def check_accelerator_summary(accelerator_summary: str | None):
     return inputTemplate("Accelerator Summary", "accelerator_summary", accelerator_summary, validate_accelerator_summary(accelerator_summary))
 
+@app.post('/file_size')
+def check_file_size(file_size: int | None):
+    return inputTemplate("File Size", "file_size", file_size, validate_file_size(file_size))
+
 @app.post('/memory_size')
 def check_memory_size(memory_size: int | None):
     return inputTemplate("Memory Size", "memory_size", memory_size, validate_memory_size(memory_size))
@@ -98,35 +101,19 @@ def submit(session, d: dict):
     d['mlm_output_shape'] = [int(d.pop(f'mlm_output_shape_{i+1}')) if d.get(f'mlm_output_shape_{i+1}') else d.pop(f'mlm_output_shape_{i+1}') for i in range(4)]
     d['mlm_output_dim_order'] = [d.pop(f'mlm_output_dim_order_{i+1}') if d.get(f'mlm_output_dim_order_{i+1}') else d.pop(f'mlm_output_dim_order_{i+1}') for i in range(4)]
     d['mlm_output_classes'] = [item.strip() for item in d.get('mlm_output_classes', '').split(',')]
-    d['mlm_input_mean'] = [float(item.strip()) if item is not '' else None for item in d.get('mlm_input_mean', '').split(',')]
-    d['mlm_input_std'] = [float(item.strip()) if item is not '' else None for item in d.get('mlm_input_std', '').split(',')]
+    d['mlm_input_mean'] = [float(item.strip()) if item != '' else None for item in d.get('mlm_input_mean', '').split(',')]
+    d['mlm_input_std'] = [float(item.strip()) if item != '' else None for item in d.get('mlm_input_std', '').split(',')]
 
     # from the fasthtml discord https://discordapp.com/channels/689892369998676007/1247700012952191049/1273789690691981412
     # this might change past version 0.4.4 it seems pretty hacky
     d['tasks'] = [task for task in tasks if d.pop(task, None)]
     # d['mlm:output_tasks'] = [task for task in tasks if d.pop(task, None)]
-    # TODO inline validation is incomplete
-    if all(d.get(key) != '' for key in model_required_keys):
-        errors = {
-            'shape': validate_shape(d['mlm:input_shape']),
-            'model_name': validate_model_name(d.get('model_name')),
-            'architecture': validate_architecture(d.get('architecture')),
-            'framework': validate_framework(d.get('framework')),
-            'framework_version': validate_framework_version(d.get('framework_version')),
-            'accelerator': validate_accelerator(d.get('accelerator')),
-            'accelerator_summary': validate_accelerator_summary(d.get('accelerator_summary')),
-            'memory_size': validate_memory_size(d.get('memory_size')),
-            'pretrained_source': validate_pretrained_source(d.get('pretrained_source')),
-            'total_parameters': validate_total_parameters(d.get('total_parameters')),
-        }
-
-        errors = {k: v for k, v in errors.items() if v is not None}
-        return *[error_template(error) for error in errors.values()], prettyJsonTemplate(session['result_d'])
     # TODO this isn't set until the asset form is submitted
     session['result_d']['assets'] = session['result_d'].get('assets')
 
     ml_model_metadata = construct_ml_model_properties(d)
-    d = create_pystac_item(ml_model_metadata, session['result_d']['assets'])
+    assets = construct_assets(session['result_d']['assets'])
+    d = create_pystac_item(ml_model_metadata, assets)
     session['result_d'].update(d)
     return Div("Please fill in all required fields before submitting.", style='color: red;'), prettyJsonTemplate(session['result_d'])
 
@@ -174,7 +161,7 @@ def asset_homepage(session):
     session_form = Form(hx_post='/submit_asset', hx_target='#result', hx_trigger="input delay:200ms")(
                     inputTemplate(label="Title", name="title", val='', input_type='text', canValidateInline=False),
                     inputTemplate(label="URI", name="href", val='', input_type='text', canValidateInline=False),
-                    inputTemplate(label="Media Type", name="type", val='', input_type='text', canValidateInline=False),
+                    inputTemplate(label="Media Type", name="media_type", val='', input_type='text', canValidateInline=False),
                     selectCheckboxTemplate(label="Roles", options=roles, name="roles", canValidateInline=False),
                     selectEnumTemplate(
                         label="Artifact Type",
@@ -207,12 +194,13 @@ def asset_homepage(session):
 def submit_asset(session, d: dict):
     session.setdefault('result_d', {})
     d['roles'] = model_asset_implicit_roles + [role for role in roles if d.pop(role, None)]
-    session['result_d']['assets']= {}
+    session['result_d'].setdefault('assets', {})
+    d['type'] = d.pop('media_type')
     session['result_d']['assets'].update(d)
     # pystac doesn't directly support validating an asset, so put the asset inside a
     # dummy item and run the validation on that
     dummy_item = pystac.Item(
-        id="example-item",
+        id="item",
         geometry={
             "type": "Polygon",
             "coordinates": [
@@ -223,11 +211,16 @@ def submit_asset(session, d: dict):
         datetime=datetime.utcnow(),
         properties={}
     )
-    dummy_item.assets["example"] = pystac.Asset.from_dict(d)
+    dummy_item.assets["model"] = pystac.Asset.from_dict(d)
     try:
         validation_result = pystac.validation.validate(dummy_item)
     except pystac.errors.STACValidationError as e:
-        return error_template(e), prettyJsonTemplate(session['result_d'])
+        error_message = str(e)
+        if "'href'" in error_message and "non-empty" in error_message:
+            error_message = "The 'URI' field must be non-empty."
+        else:
+            error_message = f"STACValidationError: {error_message}".replace('\\n', '<br>')
+        return error_template(error_message), prettyJsonTemplate(session['result_d'])
     return prettyJsonTemplate(session['result_d'])
 
 serve()
