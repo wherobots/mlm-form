@@ -160,7 +160,7 @@ def labelDecoratorTemplate(label, isRequired):
         style="display: flex;"
     )
 
-def outputTemplate(session_result_d):
+def outputTemplate():
     return Div(
         Div(id="result", style="position: fixed; right: 50px; width: 500px; height: calc(100vh - 250px); overflow: auto;"),
         style="position: relative;"
