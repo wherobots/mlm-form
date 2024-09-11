@@ -7,12 +7,12 @@ from src.mlm_form.make_item import construct_ml_model_properties, construct_asse
 from stac_model.runtime import AcceleratorEnum
 from datetime import datetime
 import pystac
+import copy
 
 app, rt = fast_app(hdrs=(picolink))
 
 @app.get('/')
 def homepage(session):
-    
     return Body(
         Main(
             Header(
@@ -28,7 +28,7 @@ def homepage(session):
             ),
             Grid(
                 session_form(session, submitOnLoad=True),
-                outputTemplate('result')
+                outputTemplate()
             ),
             style=main_element_style
         )
@@ -84,7 +84,7 @@ def check_total_parameters(total_parameters: int | None):
 
 @app.post('/submit')
 def submit(session, d: dict):
-    session.setdefault('result_d', {})
+    uncorrected_d = copy.deepcopy(d)
     # TODO for some reason the enum and checkbox template don't set default empty values
     d['mlm_input_norm_type'] = d.get('mlm_input_norm_type')
     d['mlm_input_resize_type'] = d.get('mlm_input_resize_type')
@@ -96,21 +96,19 @@ def submit(session, d: dict):
     d['mlm_output_shape'] = [int(d.pop(f'mlm_output_shape_{i+1}')) if d.get(f'mlm_output_shape_{i+1}') else d.pop(f'mlm_output_shape_{i+1}') for i in range(4)]
     d['mlm_output_dim_order'] = [d.pop(f'mlm_output_dim_order_{i+1}') if d.get(f'mlm_output_dim_order_{i+1}') else d.pop(f'mlm_output_dim_order_{i+1}') for i in range(4)]
     d['mlm_output_classes'] = [item.strip() for item in d.get('mlm_output_classes', '').split(',')]
-    d['mlm_input_mean'] = [float(item.strip()) if item != '' else None for item in d.get('mlm_input_mean', '').split(',')]
-    d['mlm_input_std'] = [float(item.strip()) if item != '' else None for item in d.get('mlm_input_std', '').split(',')]
+    d['mlm_input_mean'] = [float(item.strip()) if item != '' else [''] for item in d.get('mlm_input_mean', '').split(',')]
+    d['mlm_input_std'] = [float(item.strip()) if item != '' else [''] for item in d.get('mlm_input_std', '').split(',')]
 
     # from the fasthtml discord https://discordapp.com/channels/689892369998676007/1247700012952191049/1273789690691981412
     # this might change past version 0.4.4 it seems pretty hacky
     d['tasks'] = [task for task in tasks if d.pop(task, None)]
     # d['mlm:output_tasks'] = [task for task in tasks if d.pop(task, None)]
-    # TODO this isn't set until the asset form is submitted
-    session['result_d']['assets'] = session['result_d'].get('assets')
-
+    session['form_format_d'].update(uncorrected_d)
     ml_model_metadata = construct_ml_model_properties(d)
-    assets = construct_assets(session['result_d']['assets'])
-    d = create_pystac_item(ml_model_metadata, assets)
-    session['result_d'].update(d)
-    return Div("Please fill in all required fields before submitting.", style='color: red;'), prettyJsonTemplate(session['result_d'])
+    assets = construct_assets(session['stac_format_d'].get('assets'))
+    item = create_pystac_item(ml_model_metadata, assets)
+    session['stac_format_d'].update(item)
+    return Div("Please fill in all required fields before submitting.", style='color: red;'), prettyJsonTemplate(item)
 
 roles = [role for role in model_asset_roles if role not in model_asset_implicit_roles]
 
@@ -121,7 +119,11 @@ roles = [role for role in model_asset_roles if role not in model_asset_implicit_
 # `submitOnLoad` should be set to true for the initial page load so that the form will
 # auto-submit to populate the results if there is saved state in the session
 def session_form(session, submitOnLoad=False):
-    result = session.get('result_d', {})
+    # stac format d contains keys with ':' to comply with mlm spec
+    # but ':' can't be used in app routes so we need to maintain two states with renamed keys
+    session.setdefault('stac_format_d', {})
+    session.setdefault('form_format_d', {})
+    result = session.get('form_format_d', {})
     trigger = "input delay:200ms, load" if submitOnLoad and result else "input delay:200ms"
     session_form = Form(hx_post='/submit', hx_target='#result', hx_trigger=trigger, id="session_form", hx_swap_oob="#session_form")(
                     inputTemplate(label="Model Name", name="model_name", val='', input_type='text'),
@@ -152,10 +154,13 @@ def session_form(session, submitOnLoad=False):
     return session_form
 
 def session_asset_form(session, submitOnLoad=False):
-    if session.get('result_d', {}).get('assets', {}):
-        result = session['result_d'].get('assets', {})
-    else:
-        result = {}
+    # stac format d contains keys with ':' to comply with mlm spec
+    # but ':' can't be used in app routes so we need to maintain two states with renamed keys
+    session.setdefault('stac_format_d', {})
+    session.setdefault('form_format_d', {})
+    session['stac_format_d'].setdefault('assets', {})
+    session['form_format_d'].setdefault('assets', {})
+    result = session['form_format_d'].get('assets', {})
     trigger = "input delay:200ms, load" if submitOnLoad and result else "input delay:200ms"
     session_asset_form = Form(hx_post='/submit_asset', hx_target='#result', hx_trigger=trigger, id="session_asset_form", hx_swap_oob="#session_asset_form")(
                     inputTemplate(label="Title", name="title", val='', input_type='text', canValidateInline=False),
@@ -187,7 +192,7 @@ def asset_homepage(session):
             ),
             Grid(
                 session_asset_form(session, submitOnLoad=True),
-                outputTemplate('result')
+                outputTemplate()
             ),
             style=main_element_style
         )
@@ -195,11 +200,9 @@ def asset_homepage(session):
 
 @app.post('/submit_asset')
 def submit_asset(session, d: dict):
-    session.setdefault('result_d', {})
     d['roles'] = model_asset_implicit_roles + [role for role in roles if d.pop(role, None)]
-    session['result_d'].setdefault('assets', {})
     d['type'] = d.pop('media_type')
-    session['result_d']['assets'].update(d)
+    session['stac_format_d']['assets'].update(d)
     # pystac doesn't directly support validating an asset, so put the asset inside a
     # dummy item and run the validation on that
     dummy_item = pystac.Item(
@@ -223,7 +226,7 @@ def submit_asset(session, d: dict):
             error_message = "The 'URI' field must be non-empty."
         else:
             error_message = f"STACValidationError: {error_message}".replace('\\n', '<br>')
-        return error_template(error_message), prettyJsonTemplate(session['result_d'])
-    return prettyJsonTemplate(session['result_d'])
+        return error_template(error_message), prettyJsonTemplate(session['stac_format_d'])
+    return prettyJsonTemplate(session['stac_format_d'])
 
 serve()
