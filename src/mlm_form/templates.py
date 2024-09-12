@@ -15,20 +15,20 @@ tasks = [task.value for task in TaskEnum]
 ### HTML Templates ###
 ######################
 
-def inputTemplate(label, name, val, error_msg=None, input_type='text', canValidateInline=True):
+def inputTemplate(label, name, val, error_msg=None, input_type='text', canValidateInline=False):
     return Div(hx_target='this', hx_swap='outerHTML', cls=f"{error_msg if error_msg else 'Valid'}", style=control_container_style)(
                labelDecoratorTemplate(Label(label), name in model_required_keys),
                Input(name=name,type=input_type,value=f'{val}',hx_post=f'/{name.lower()}' if canValidateInline else None, style=text_input_style),
                Div(f'{error_msg}', style='color: red;') if error_msg else None)
 
-def inputListTemplate(label, name, values=[None, None, None, None], error_msg=None, input_type='number'):
+def inputListTemplate(label, name, values=[None, None, None, None], error_msg=None, input_type='number', canValidateInline=False):
     return Div(hx_target='this', hx_swap='outerHTML', cls=f"{error_msg if error_msg else 'Valid'}", style=control_container_style)(
         labelDecoratorTemplate(Label(label), name in model_required_keys),
         Div(style="display: flex; gap: 20px; justify-content: flex-start; width: 100%; max-width: 600px;")(
             *[
                 Input(name=f'{name.lower()}_{i+1}', id=f'{name.lower()}_{i+1}',
                       placeholder=f"Enter {label} {i+1}", type=input_type, value=val,
-                      style="width: 120px;", hx_post=f'/{name.lower()}')
+                      style="width: 120px;", hx_post=f'/{name.lower()}' if canValidateInline else None)
                 for i, val in enumerate(values)
             ]
         ),
@@ -40,7 +40,7 @@ def mk_opts(nm, cs):
         Option(f'-- select {nm} --', disabled='', selected='', value=''),
         *map(Option, cs))
 
-def selectEnumTemplate(label, options, name, error_msg=None, canValidateInline=True):
+def selectEnumTemplate(label, options, name, error_msg=None, canValidateInline=False):
     return Div(hx_target='this', hx_swap='outerHTML', cls=f"{error_msg if error_msg else 'Valid'}", style=control_container_style)(
         labelDecoratorTemplate(Label(label), name in model_required_keys),
         Select(
@@ -55,7 +55,7 @@ def mk_checkbox(options):
         *[Div(CheckboxX(id=option, label=option), style="width: 100%;") for option in options]
     )
 
-def selectCheckboxTemplate(label, options, name, error_msg=None, canValidateInline=True):
+def selectCheckboxTemplate(label, options, name, error_msg=None, canValidateInline=False):
     return Div(hx_target='this', hx_swap='outerHTML', cls=f"{error_msg if error_msg else 'Valid'}", style=control_container_style)(
         labelDecoratorTemplate(Label(label), name in model_required_keys),
         Group(

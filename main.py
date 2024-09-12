@@ -40,53 +40,7 @@ def clear_form(session):
     session.clear()
     return session_form(session)
 
-### Field Validation Routing and Filling Values ###
-
-@app.post('/mlm_input_shape')
-def check_shape(shape_1: int | None, shape_2: int | None, shape_3: int | None, shape_4: int | None):
-    shape = [shape_1, shape_2, shape_3, shape_4]
-    return inputListTemplate('Shape', 'shape', shape, validate_shape(shape))
-
-@app.post('/mlm_output_shape')
-def check_shape(shape_1: int | None, shape_2: int | None, shape_3: int | None, shape_4: int | None):
-    shape = [shape_1, shape_2, shape_3, shape_4]
-    return inputListTemplate('Shape', 'shape', shape, validate_shape(shape))
-
-@app.post('/model_name')
-def check_model_name(model_name: str | None):
-    return inputTemplate("Model Name", "model_name", model_name, validate_model_name(model_name))
-
-@app.post('/architecture')
-def check_architecture(architecture: str | None):
-    return inputTemplate("Architecture", "architecture", architecture, validate_architecture(architecture))
-
-@app.post('/framework')
-def check_framework(framework: str | None):
-    return inputTemplate("Framework", "framework", framework, validate_framework(framework))
-
-@app.post('/framework_version')
-def check_framework_version(framework_version: str | None):
-    return inputTemplate("Framework Version", "framework_version", framework_version, validate_framework_version(framework_version))
-
-@app.post('/accelerator_summary')
-def check_accelerator_summary(accelerator_summary: str | None):
-    return inputTemplate("Accelerator Summary", "accelerator_summary", accelerator_summary, validate_accelerator_summary(accelerator_summary))
-
-@app.post('/memory_size')
-def check_memory_size(memory_size: int | None):
-    return inputTemplate("Memory Size", "memory_size", memory_size, validate_memory_size(memory_size))
-
-@app.post('/pretrained_source')
-def check_pretrained_source(pretrained_source: str | None):
-    return inputTemplate("Pretrained Source", "pretrained_source", pretrained_source, validate_pretrained_source(pretrained_source))
-
-@app.post('/total_parameters')
-def check_total_parameters(total_parameters: int | None):
-    return inputTemplate("Total Parameters", "total_parameters", total_parameters, validate_total_parameters(total_parameters))
-
-@app.post('/submit')
-def submit(session, d: dict):
-    session['form_format_d'].update(copy.deepcopy(d))
+def form_format_to_stac_format_input(d):
     # TODO for some reason the enum and checkbox template don't set default empty values
     d['mlm_input_norm_type'] = d.get('mlm_input_norm_type')
     d['mlm_input_resize_type'] = d.get('mlm_input_resize_type')
@@ -104,18 +58,24 @@ def submit(session, d: dict):
     # this might change past version 0.4.4 it seems pretty hacky
     d['tasks'] = [task for task in tasks if d.pop(task, None)]
     # d['mlm:output_tasks'] = [task for task in tasks if d.pop(task, None)]
+    return d
 
-
+@app.post('/submit')
+def submit(session, d: dict):
+    session['form_format_d'].update(copy.deepcopy(d))
+    d = form_format_to_stac_format_input(d)
+    # fix???
+    session['stac_format_d'].update(d)
     # this does not
-    # ml_model_metadata = construct_ml_model_properties(d)
-    # assets = construct_assets(session['stac_format_d'].get('assets'))
-    # item = create_pystac_item(ml_model_metadata, assets)
-    # session['stac_format_d'].update(item)
-    # return Div("Please fill in all required fields before submitting.", style='color: red;'), prettyJsonTemplate(item)
+    ml_model_metadata = construct_ml_model_properties(d)
+    assets = construct_assets(session['stac_format_d'].get('assets'))
+    item = create_pystac_item(ml_model_metadata, assets)
+    #session['stac_format_d'].update(item)
+    return Div("Please fill in all required fields before submitting.", style='color: red;'), prettyJsonTemplate(item)
     
     # This preserves state
-    session['stac_format_d'].update(d)
-    return Div("Please fill in all required fields before submitting.", style='color: red;'), prettyJsonTemplate(session['stac_format_d'])
+    # session['stac_format_d'].update(d)
+    # return Div("Please fill in all required fields before submitting.", style='color: red;'), prettyJsonTemplate(session['stac_format_d'])
 
 roles = [role for role in model_asset_roles if role not in model_asset_implicit_roles]
 
@@ -163,6 +123,7 @@ def session_asset_form(session, submitOnLoad=False):
     session.setdefault('form_format_d', {})
     session['stac_format_d'].setdefault('assets', {})
     session['form_format_d'].setdefault('assets', {})
+    # TODO decide whether to show just asset section or full json on asset page on load and edit
     #result = session['form_format_d'].get('assets', {})
     trigger = "input delay:200ms, load" if submitOnLoad and session.get('stac_format_d') else "input delay:200ms"
     session_asset_form = Form(hx_post='/submit_asset', hx_target='#result', hx_trigger=trigger, id="session_asset_form", hx_swap_oob="#session_asset_form")(
@@ -232,5 +193,4 @@ def submit_asset(session, d: dict):
             error_message = f"STACValidationError: {error_message}".replace('\\n', '<br>')
         return error_template(error_message), prettyJsonTemplate(session['stac_format_d'])
     return prettyJsonTemplate(session['stac_format_d'])
-
 serve()
