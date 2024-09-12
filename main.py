@@ -3,7 +3,7 @@ from fasthtml.common import *
 from src.mlm_form.styles import *
 from src.mlm_form.templates import *
 from src.mlm_form.validation import *
-from src.mlm_form.make_item import construct_ml_model_properties, create_pystac_item
+from src.mlm_form.make_item import construct_ml_model_properties, construct_assets, create_pystac_item
 from stac_model.runtime import AcceleratorEnum
 from datetime import datetime
 import pystac
@@ -40,7 +40,7 @@ def clear_form(session):
     session.clear()
     return session_form(session)
 
-### Field Validation Routing ###
+### Field Validation Routing and Filling Values ###
 
 @app.post('/mlm_input_shape')
 def check_shape(shape_1: int | None, shape_2: int | None, shape_3: int | None, shape_4: int | None):
@@ -86,18 +86,36 @@ def check_total_parameters(total_parameters: int | None):
 
 @app.post('/submit')
 def submit(session, d: dict):
+    session['form_format_d'].update(copy.deepcopy(d))
+    # TODO for some reason the enum and checkbox template don't set default empty values
+    d['mlm_input_norm_type'] = d.get('mlm_input_norm_type')
+    d['mlm_input_resize_type'] = d.get('mlm_input_resize_type')
+    d['accelerator'] = d.get('accelerator')
+    d['accelerator_constrained'] = d.get('accelerator_constrained')
     # this handles empty strings on submit and the fact that we have to manually collate list values
     d['mlm_input_shape'] = [int(d.pop(f'mlm_input_shape_{i+1}')) if d.get(f'mlm_input_shape_{i+1}') else d.pop(f'mlm_input_shape_{i+1}') for i in range(4)]
     d['mlm_output_shape'] = [int(d.pop(f'mlm_output_shape_{i+1}')) if d.get(f'mlm_output_shape_{i+1}') else d.pop(f'mlm_output_shape_{i+1}') for i in range(4)]
     d['mlm_input_dim_order'] = [d.pop(f'mlm_input_dim_order_{i+1}') if d.get(f'mlm_input_dim_order_{i+1}') else d.pop(f'mlm_input_dim_order_{i+1}') for i in range(4)]
     d['mlm_output_dim_order'] = [d.pop(f'mlm_output_dim_order_{i+1}') if d.get(f'mlm_output_dim_order_{i+1}') else d.pop(f'mlm_output_dim_order_{i+1}') for i in range(4)]
     d['mlm_output_classes'] = [item.strip() for item in d.get('mlm_output_classes', '').split(',')]
+    d['mlm_input_mean'] = [float(item.strip()) if item != '' else [''] for item in d.get('mlm_input_mean', '').split(',')]
+    d['mlm_input_std'] = [float(item.strip()) if item != '' else [''] for item in d.get('mlm_input_std', '').split(',')]
     # from the fasthtml discord https://discordapp.com/channels/689892369998676007/1247700012952191049/1273789690691981412
     # this might change past version 0.4.4 it seems pretty hacky
     d['tasks'] = [task for task in tasks if d.pop(task, None)]
     # d['mlm:output_tasks'] = [task for task in tasks if d.pop(task, None)]
-    session['form_format_d'].update(d)
-    return Div("Please fill in all required fields before submitting.", style='color: red;'), prettyJsonTemplate(session['form_format_d'])
+
+
+    # this does not
+    # ml_model_metadata = construct_ml_model_properties(d)
+    # assets = construct_assets(session['stac_format_d'].get('assets'))
+    # item = create_pystac_item(ml_model_metadata, assets)
+    # session['stac_format_d'].update(item)
+    # return Div("Please fill in all required fields before submitting.", style='color: red;'), prettyJsonTemplate(item)
+    
+    # This preserves state
+    session['stac_format_d'].update(d)
+    return Div("Please fill in all required fields before submitting.", style='color: red;'), prettyJsonTemplate(session['stac_format_d'])
 
 roles = [role for role in model_asset_roles if role not in model_asset_implicit_roles]
 
@@ -150,7 +168,7 @@ def session_asset_form(session, submitOnLoad=False):
     session_asset_form = Form(hx_post='/submit_asset', hx_target='#result', hx_trigger=trigger, id="session_asset_form", hx_swap_oob="#session_asset_form")(
                     inputTemplate(label="Title", name="title", val='', input_type='text', canValidateInline=False),
                     inputTemplate(label="URI", name="href", val='', input_type='text', canValidateInline=False),
-                    inputTemplate(label="Media Type", name="type", val='', input_type='text', canValidateInline=False),
+                    inputTemplate(label="Media Type", name="media_type", val='', input_type='text', canValidateInline=False),
                     selectCheckboxTemplate(label="Roles", options=roles, name="roles", canValidateInline=False),
                     selectEnumTemplate(
                         label="Artifact Type",
@@ -185,13 +203,14 @@ def asset_homepage(session):
 
 @app.post('/submit_asset')
 def submit_asset(session, d: dict):
+    session['form_format_d']['assets'].update(copy.deepcopy(d))
     d['roles'] = model_asset_implicit_roles + [role for role in roles if d.pop(role, None)]
-    d['type'] = d.pop('type')
-    session['form_format_d']['assets'].update(d)
+    d['type'] = d.pop('media_type')
+    session['stac_format_d']['assets'].update(d)
     # pystac doesn't directly support validating an asset, so put the asset inside a
     # dummy item and run the validation on that
     dummy_item = pystac.Item(
-        id="example-item",
+        id="item",
         geometry={
             "type": "Polygon",
             "coordinates": [
@@ -202,11 +221,16 @@ def submit_asset(session, d: dict):
         datetime=datetime.utcnow(),
         properties={}
     )
-    dummy_item.assets["example"] = pystac.Asset.from_dict(d)
+    dummy_item.assets["model"] = pystac.Asset.from_dict(d)
     try:
         validation_result = pystac.validation.validate(dummy_item)
     except pystac.errors.STACValidationError as e:
-        return error_template(e), prettyJsonTemplate(session['form_format_d'])
-    return prettyJsonTemplate(session['form_format_d'])
+        error_message = str(e)
+        if "'href'" in error_message and "non-empty" in error_message:
+            error_message = "The 'URI' field must be non-empty."
+        else:
+            error_message = f"STACValidationError: {error_message}".replace('\\n', '<br>')
+        return error_template(error_message), prettyJsonTemplate(session['stac_format_d'])
+    return prettyJsonTemplate(session['stac_format_d'])
 
 serve()

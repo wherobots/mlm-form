@@ -50,7 +50,6 @@ validate_framework_version = create_validation_function(MLModelProperties, "fram
 validate_accelerator = create_validation_function(MLModelProperties, "accelerator", "Please enter a valid accelerator.")
 validate_accelerator_constrained = create_validation_function(MLModelProperties, "accelerator_constrained", "Please enter a valid boolean value for accelerator_constrained.")
 validate_accelerator_summary = create_validation_function(MLModelProperties, "accelerator_summary", "Please enter a valid accelerator summary.")
-validate_file_size = create_validation_function(MLModelProperties, "file_size", "Please enter a valid file size.")
 validate_memory_size = create_validation_function(MLModelProperties, "memory_size", "Please enter a valid memory size.")
 validate_pretrained = create_validation_function(MLModelProperties, "pretrained", "Please enter a valid boolean value for pretrained.")
 validate_pretrained_source = create_validation_function(MLModelProperties, "pretrained_source", "Please enter a valid pretrained source.")
