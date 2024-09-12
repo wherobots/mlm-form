@@ -185,16 +185,8 @@ def submit_asset(session, d: dict):
     )
     dummy_item.assets["model"] = pystac.Asset.from_dict(d)
 
-    assets = construct_assets(session['stac_format_d'].get('assets'))
-
-    try:
-        validation_result = pystac.validation.validate(dummy_item)
-    except pystac.errors.STACValidationError as e:
-        error_message = str(e)
-        if "'href'" in error_message and "non-empty" in error_message:
-            error_message = "The 'URI' field must be non-empty."
-        else:
-            error_message = f"STACValidationError: {error_message}".replace('\\n', '<br>')
-        return error_template(error_message), prettyJsonTemplate(assets["model"].to_dict())
-    return prettyJsonTemplate(assets["model"].to_dict())
+    required_keys = ['href']
+    if not all(key in d and d[key] != '' for key in required_keys):
+        return error_template("The 'URI' field must be non-empty."), prettyJsonTemplate(session['stac_format_d'].get('assets'))
+    return prettyJsonTemplate(d)
 serve()

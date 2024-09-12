@@ -131,19 +131,17 @@ def construct_assets(d: Dict[str, Any]) -> Dict[str, pystac.Asset]:
     Returns:
         Dict[str, pystac.Asset]: The assets for the STAC item.
     """
-    assets = {}
-    required_keys = ['href']
-    if d and all(key in d and d[key] is not None for key in required_keys):
-        # TODO correct mlm_ > mlm:
-        model_asset = pystac.Asset(
-            title=d.get('title'),
-            href=d.get('href'),
-            media_type=d.get('type'),
-            roles=d.get('roles'),
-            extra_fields={"mlm_artifact_type": d.get('mlm:artifact_type'),}
-        )
-        assets["model"] = model_asset
-    return assets
+    if d is None:
+        return {}
+    # TODO correct mlm_ > mlm:
+    model_asset = pystac.Asset(
+        title=d.get('title'),
+        href=d.get('href'),
+        media_type=d.get('type'),
+        roles=d.get('roles'),
+        extra_fields={"mlm_artifact_type": d.get('mlm:artifact_type'),}
+    )
+    return {"model": model_asset}
 
 def create_pystac_item(ml_model_meta: MLModelProperties, assets: Dict[str, pystac.Asset], self_href="./item.json") -> pystac.Item:
     """Creates stac item metadata and extends it with MLM specific properties.
