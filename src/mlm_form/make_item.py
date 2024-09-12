@@ -140,7 +140,7 @@ def construct_assets(d: Dict[str, Any]) -> Dict[str, pystac.Asset]:
             href=d.get('href'),
             media_type=d.get('type'),
             roles=d.get('roles'),
-            extra_fields={"mlm_artifact_type": d.get('mlm_artifact_type'),}
+            extra_fields={"mlm:artifact_type": d.get('mlm:artifact_type'),}
         )
         assets["model"] = model_asset
     return assets
