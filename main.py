@@ -135,7 +135,7 @@ def session_asset_form(session, submitOnLoad=False):
                     selectEnumTemplate(
                         label="Artifact Type",
                         options=model_asset_artifact_types,
-                        name="mlm:artifact_type",
+                        name="mlm_artifact_type",
                         canValidateInline=False
                     ),
                 )

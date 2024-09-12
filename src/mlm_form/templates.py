@@ -38,7 +38,7 @@ def inputListTemplate(label, name, values=[None, None, None, None], error_msg=No
 def mk_opts(nm, cs):
     return (
         Option(f'-- select {nm} --', disabled='', selected='', value=''),
-        *map(Option, cs))
+        *map(lambda c: Option(c, value=c), cs))
 
 def selectEnumTemplate(label, options, name, error_msg=None, canValidateInline=False):
     return Div(hx_target='this', hx_swap='outerHTML', cls=f"{error_msg if error_msg else 'Valid'}", style=control_container_style)(
