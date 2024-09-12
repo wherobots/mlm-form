@@ -124,17 +124,17 @@ def construct_assets(d: Dict[str, Any]) -> Dict[str, pystac.Asset]:
         Dict[str, pystac.Asset]: The assets for the STAC item.
     """
     assets = {}
-    required_keys = ['title', 'model_file', 'type', 'roles', 'mlm:artifact_type']
+    required_keys = ['href']
     if d and all(key in d and d[key] is not None for key in required_keys):
         # TODO correct mlm_ > mlm:
-        model_file = pystac.Asset(
+        model_asset = pystac.Asset(
             title=d.get('title'),
-            href=d.get('model_file'),
+            href=d.get('href'),
             media_type=d.get('type'),
             roles=d.get('roles'),
             extra_fields={"mlm_artifact_type": d.get('mlm:artifact_type'),}
         )
-        assets["model"] = model_file
+        assets["model"] = model_asset
     return assets
 
 def create_pystac_item(ml_model_meta: MLModelProperties, assets: Dict[str, pystac.Asset], self_href="./item.json") -> pystac.Item:

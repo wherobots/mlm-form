@@ -62,15 +62,16 @@ def form_format_to_stac_format_input(d):
 
 @app.post('/submit')
 def submit(session, d: dict):
+    session.setdefault('stac_format_d', {})
+    session.setdefault('form_format_d', {})
     session['form_format_d'].update(copy.deepcopy(d))
     d = form_format_to_stac_format_input(d)
-    # fix???
+    # fix??? preserves state when going back to mlm form but not assets
     session['stac_format_d'].update(d)
     # this does not
     ml_model_metadata = construct_ml_model_properties(d)
     assets = construct_assets(session['stac_format_d'].get('assets'))
     item = create_pystac_item(ml_model_metadata, assets)
-    #session['stac_format_d'].update(item)
     return Div("Please fill in all required fields before submitting.", style='color: red;'), prettyJsonTemplate(item)
     
     # This preserves state
@@ -183,6 +184,9 @@ def submit_asset(session, d: dict):
         properties={}
     )
     dummy_item.assets["model"] = pystac.Asset.from_dict(d)
+
+    assets = construct_assets(session['stac_format_d'].get('assets'))
+
     try:
         validation_result = pystac.validation.validate(dummy_item)
     except pystac.errors.STACValidationError as e:
@@ -191,6 +195,6 @@ def submit_asset(session, d: dict):
             error_message = "The 'URI' field must be non-empty."
         else:
             error_message = f"STACValidationError: {error_message}".replace('\\n', '<br>')
-        return error_template(error_message), prettyJsonTemplate(session['stac_format_d'])
-    return prettyJsonTemplate(session['stac_format_d'])
+        return error_template(error_message), prettyJsonTemplate(assets["model"].to_dict())
+    return prettyJsonTemplate(assets["model"].to_dict())
 serve()
