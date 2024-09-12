@@ -163,8 +163,8 @@ def session_asset_form(session, submitOnLoad=False):
     session.setdefault('form_format_d', {})
     session['stac_format_d'].setdefault('assets', {})
     session['form_format_d'].setdefault('assets', {})
-    result = session['form_format_d'].get('assets', {})
-    trigger = "input delay:200ms, load" if submitOnLoad and result else "input delay:200ms"
+    #result = session['form_format_d'].get('assets', {})
+    trigger = "input delay:200ms, load" if submitOnLoad and session.get('stac_format_d') else "input delay:200ms"
     session_asset_form = Form(hx_post='/submit_asset', hx_target='#result', hx_trigger=trigger, id="session_asset_form", hx_swap_oob="#session_asset_form")(
                     inputTemplate(label="Title", name="title", val='', input_type='text', canValidateInline=False),
                     inputTemplate(label="URI", name="href", val='', input_type='text', canValidateInline=False),
@@ -177,7 +177,7 @@ def session_asset_form(session, submitOnLoad=False):
                         canValidateInline=False
                     ),
                 )
-    fill_form(session_asset_form, result)
+    fill_form(session_asset_form, session['form_format_d'].get('assets', {}))
     return session_asset_form
 
 @app.get('/asset')
