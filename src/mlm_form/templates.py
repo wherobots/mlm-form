@@ -86,7 +86,7 @@ def modelInputTemplate(label, name, error_msg=None):
             Input(type="text", name=f"{name}_name", style=text_input_style)
         ),
         Div(
-            Label("Bands"),
+            Label("Bands (enter a single comma separated list of values)"),
             Input(type="text", name=f"{name}_bands", style=text_input_style),
         ),
         inputListTemplate(label="Shape", name=f"{name}_shape", error_msg=None, input_type='number'),

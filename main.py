@@ -54,6 +54,7 @@ def form_format_to_stac_format_input(d):
     d['mlm_output_classes'] = [item.strip() for item in d.get('mlm_output_classes', '').split(',')]
     d['mlm_input_mean'] = [float(item.strip()) if item != '' else [''] for item in d.get('mlm_input_mean', '').split(',')]
     d['mlm_input_std'] = [float(item.strip()) if item != '' else [''] for item in d.get('mlm_input_std', '').split(',')]
+    d['mlm_input_bands'] = [item.strip() if item != '' else [''] for item in d.get('mlm_input_bands', '').split(',')]
     # from the fasthtml discord https://discordapp.com/channels/689892369998676007/1247700012952191049/1273789690691981412
     # this might change past version 0.4.4 it seems pretty hacky
     d['tasks'] = [task for task in tasks if d.pop(task, None)]
@@ -99,7 +100,7 @@ def session_form(session, submitOnLoad=False):
                     inputTemplate(label="Framework Version", name="framework_version", val='', input_type='text'),
                     inputTemplate(label="Memory Size", name="memory_size", val='', input_type='number'),
                     inputTemplate(label="Total Parameters", name="total_parameters", val='', input_type='number'),
-                    inputTemplate(label="Is it pretrained?", name="pretrained", val='', input_type='boolean'),
+                    trueFalseRadioTemplate(label="Is it pretrained for one or more tasks and one or more data domains?", name="pretrained"),
                     inputTemplate(label="Pretrained source", name="pretrained_source", val='', input_type='text'),
                     inputTemplate(label="Batch size suggestion", name="batch_size_suggestion", val='', input_type='number'),
                     selectEnumTemplate(
