@@ -112,7 +112,6 @@ def session_form(session, submitOnLoad=False):
                     trueFalseRadioTemplate(label="Accelerator constrained", name="accelerator_constrained"),
                     inputTemplate(label="Accelerator Summary", name="accelerator_summary", val='', input_type='text'),
                     inputTemplate(label="Accelerator Count", name="accelerator_count", val='', input_type='number'),
-                    inputTemplate(label="MLM hyperparameters", name="hyperparameters", val='', input_type='text'),
                     modelInputTemplate(label="MLM Input", name="mlm_input"),
                     modelOutputTemplate(label="MLM Output", name="mlm_output"),
                 )

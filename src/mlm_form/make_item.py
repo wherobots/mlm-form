@@ -97,13 +97,18 @@ def construct_ml_model_properties(d: Dict[str, Any]) -> MLModelProperties:
         tasks=d['tasks'],
         framework=d['framework'],
         framework_version=d['framework_version'],
-        accelerator=bool(d['accelerator']),
-        accelerator_constrained=d['accelerator_constrained'],
+        accelerator=d['accelerator'],
+        accelerator_constrained=(
+            None if d['accelerator_constrained'] is None 
+            else (True if d['accelerator_constrained'].lower() == 'true' else False)
+        ),
         accelerator_summary=d['accelerator_summary'],
+        accelerator_count=d['accelerator_count'],
         memory_size=d['memory_size'],
         pretrained=d['pretrained'],
         pretrained_source=d['pretrained_source'],
         total_parameters=d['total_parameters'],
+        batch_size_suggestion=d['batch_size_suggestion'],
         input=[model_input],
         output=[model_output],
     )
