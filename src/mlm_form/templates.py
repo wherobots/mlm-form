@@ -15,20 +15,20 @@ tasks = [task.value for task in TaskEnum]
 ### HTML Templates ###
 ######################
 
-def inputTemplate(label, name, val, error_msg=None, input_type='text', canValidateInline=True):
+def inputTemplate(label, name, val, error_msg=None, input_type='text', canValidateInline=False):
     return Div(hx_target='this', hx_swap='outerHTML', cls=f"{error_msg if error_msg else 'Valid'}", style=control_container_style)(
                labelDecoratorTemplate(Label(label), name in model_required_keys),
                Input(name=name,type=input_type,value=f'{val}',hx_post=f'/{name.lower()}' if canValidateInline else None, style=text_input_style),
                Div(f'{error_msg}', style='color: red;') if error_msg else None)
 
-def inputListTemplate(label, name, values=[None, None, None, None], error_msg=None, input_type='number'):
+def inputListTemplate(label, name, values=[None, None, None, None], error_msg=None, input_type='number', canValidateInline=False):
     return Div(hx_target='this', hx_swap='outerHTML', cls=f"{error_msg if error_msg else 'Valid'}", style=control_container_style)(
         labelDecoratorTemplate(Label(label), name in model_required_keys),
         Div(style="display: flex; gap: 20px; justify-content: flex-start; width: 100%; max-width: 600px;")(
             *[
                 Input(name=f'{name.lower()}_{i+1}', id=f'{name.lower()}_{i+1}',
                       placeholder=f"Enter {label} {i+1}", type=input_type, value=val,
-                      style="width: 120px;", hx_post=f'/{name.lower()}')
+                      style="width: 120px;", hx_post=f'/{name.lower()}' if canValidateInline else None)
                 for i, val in enumerate(values)
             ]
         ),
@@ -40,7 +40,7 @@ def mk_opts(nm, cs):
         Option(f'-- select {nm} --', disabled='', selected='', value=''),
         *map(Option, cs))
 
-def selectEnumTemplate(label, options, name, error_msg=None, canValidateInline=True):
+def selectEnumTemplate(label, options, name, error_msg=None, canValidateInline=False):
     return Div(hx_target='this', hx_swap='outerHTML', cls=f"{error_msg if error_msg else 'Valid'}", style=control_container_style)(
         labelDecoratorTemplate(Label(label), name in model_required_keys),
         Select(
@@ -55,7 +55,7 @@ def mk_checkbox(options):
         *[Div(CheckboxX(id=option, label=option), style="width: 100%;") for option in options]
     )
 
-def selectCheckboxTemplate(label, options, name, error_msg=None, canValidateInline=True):
+def selectCheckboxTemplate(label, options, name, error_msg=None, canValidateInline=False):
     return Div(hx_target='this', hx_swap='outerHTML', cls=f"{error_msg if error_msg else 'Valid'}", style=control_container_style)(
         labelDecoratorTemplate(Label(label), name in model_required_keys),
         Group(
@@ -101,20 +101,24 @@ def modelInputTemplate(label, name, error_msg=None):
             style="margin-bottom: 15px;"
         ),
         selectEnumTemplate("Normalization Type", normalize_type_values,
-            f"{name}_norm_type", error_msg=None, canValidateInline=True),
+            f"{name}_norm_type", error_msg=None, canValidateInline=False),
         Div(
             Label("Norm Clip"),
             Input(type="text", name=f"{name}_norm_clip", style=text_input_style),
         ),
         selectEnumTemplate("Resize Type", resize_type_values,
-            f"{name}_resize_type", error_msg=None, canValidateInline=True),
+            f"{name}_resize_type", error_msg=None, canValidateInline=False),
+        # TODO this should be made dynamic so that users can create a new field for a statistic and
+        # then enter an N length list of values for that statistic similar to 
+        # https://gallery.fastht.ml/start_simple/sqlite_todo/code
         Div(
-            Label("Statistics"),
-            Input(type="text", name=f"{name}_statistics", style=text_input_style),
+            Label("Mean Statistic (enter a single comma separated list of values)"),
+            Input(type="text", name=f"{name}_mean", style=text_input_style),
         ),
         Div(
-            Label("Pre Processing Function"),
-            Input(type="text", name=f"{name}_pre_processing_function", style=text_input_style),
+            Label("Std Statistic (enter a single comma separated list of values)"),
+            Input(type="text", name=f"{name}_std", style=text_input_style),
+
         ),
         Div(f'{error_msg}', style='color: red;') if error_msg else None,
         style=f'{control_container_style} margin-left: 30px;'
@@ -130,7 +134,7 @@ def modelOutputTemplate(label, name, error_msg=None):
             Input(type="text", name=f"{name}_name", style=text_input_style)
         ),
         # TODO disabling this because we only work with models tha accept single outputs for now but
-        # this should be flippe don and made working in the future
+        # this should be flipped on and made working in the future
         #selectCheckboxTemplate(label="Tasks", options=tasks, name=f"{name}_tasks", canValidateInline=False),
         inputListTemplate(label="Shape", name=f"{name}_shape", error_msg=None, input_type='number'),
         inputListTemplate(label="Dimension Order", name=f"{name}_dim_order", error_msg=None, input_type='text'),
@@ -144,10 +148,6 @@ def modelOutputTemplate(label, name, error_msg=None):
         Label("Categories (currently you must enter a single comma separated list of categories)"),
         Input(type="text", name=f"{name}_classes", style=text_input_style),
         ),
-        Div(
-            Label("Post Processing Function"),
-            Input(type="text", name=f"{name}_pre_processing_function", style=text_input_style),
-        ),
         Div(f'{error_msg}', style='color: red;') if error_msg else None,
         style=f'{control_container_style} margin-left: 30px;'
     )
@@ -160,7 +160,7 @@ def labelDecoratorTemplate(label, isRequired):
         style="display: flex;"
     )
 
-def outputTemplate(session_result_d):
+def outputTemplate():
     return Div(
         Div(id="result", style="position: fixed; right: 50px; width: 500px; height: calc(100vh - 250px); overflow: auto;"),
         style="position: relative;"
