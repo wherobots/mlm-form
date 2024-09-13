@@ -44,11 +44,15 @@ def form_format_to_stac_format_input(d):
     # TODO for some reason the enum and checkbox template don't set default empty values
     d['mlm_input_norm_type'] = d.get('mlm_input_norm_type')
     d['mlm_input_resize_type'] = d.get('mlm_input_resize_type')
+    d['mlm_input_data_type'] = d.get('mlm_input_data_type')
+    d['mlm_output_data_type'] = d.get('mlm_output_data_type')
     d['accelerator'] = d.get('accelerator')
     d['accelerator_constrained'] = d.get('accelerator_constrained')
     # this handles empty strings on submit and the fact that we have to manually collate list values
     d['mlm_input_shape'] = [int(d.pop(f'mlm_input_shape_{i+1}')) if d.get(f'mlm_input_shape_{i+1}') else d.pop(f'mlm_input_shape_{i+1}') for i in range(4)]
     d['mlm_output_shape'] = [int(d.pop(f'mlm_output_shape_{i+1}')) if d.get(f'mlm_output_shape_{i+1}') else d.pop(f'mlm_output_shape_{i+1}') for i in range(4)]
+    # TODO need to raise error to user if dim values aren't unique.
+    # need to raise and prettify any error from pystac validation
     d['mlm_input_dim_order'] = [d.pop(f'mlm_input_dim_order_{i+1}') if d.get(f'mlm_input_dim_order_{i+1}') else d.pop(f'mlm_input_dim_order_{i+1}') for i in range(4)]
     d['mlm_output_dim_order'] = [d.pop(f'mlm_output_dim_order_{i+1}') if d.get(f'mlm_output_dim_order_{i+1}') else d.pop(f'mlm_output_dim_order_{i+1}') for i in range(4)]
     d['mlm_output_classes'] = [item.strip() for item in d.get('mlm_output_classes', '').split(',')]
@@ -59,6 +63,9 @@ def form_format_to_stac_format_input(d):
     # this might change past version 0.4.4 it seems pretty hacky
     d['tasks'] = [task for task in tasks if d.pop(task, None)]
     # d['mlm:output_tasks'] = [task for task in tasks if d.pop(task, None)]
+    d['accelerator_count'] = int(d.get('accelerator_count', 1))
+    d['memory_size'] = int(d.get('memory_size', 1))
+    d['total_parameters'] = int(d.get('total_parameters', 1))
     return d
 
 @app.post('/submit')
@@ -112,7 +119,7 @@ def session_form(session, submitOnLoad=False):
                     ),
                     trueFalseRadioTemplate(label="Accelerator constrained", name="accelerator_constrained"),
                     inputTemplate(label="Accelerator Summary", name="accelerator_summary", val='', input_type='text'),
-                    inputTemplate(label="Accelerator Count", name="accelerator_count", val='', input_type='number'),
+                    inputTemplate(label="Accelerator Count", name="accelerator_count", val=1, input_type='number'),
                     modelInputTemplate(label="MLM Input", name="mlm_input"),
                     modelOutputTemplate(label="MLM Output", name="mlm_output"),
                 )

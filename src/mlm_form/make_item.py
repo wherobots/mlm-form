@@ -47,7 +47,10 @@ def construct_ml_model_properties(d: Dict[str, Any]) -> MLModelProperties:
         name=d['mlm_input_name'],
         bands=d['mlm_input_bands'],
         input=input_struct,
-        norm_by_channel=d['mlm_input_norm_by_channel'],
+        norm_by_channel=(
+            None if d.get('mlm_input_norm_by_channel') is None 
+            else (True if d['mlm_input_norm_by_channel'].lower() == 'true' else False)
+        ),
         norm_type=d['mlm_input_norm_type'],
         resize_type=d['mlm_input_resize_type'],
         statistics=stats
