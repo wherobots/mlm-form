@@ -1,0 +1,152 @@
+{
+    "type": "Feature",
+    "stac_version": "1.0.0",
+    "id": "item",
+    "properties": {
+        "start_datetime": "1900-01-01T00:00:00Z",
+        "end_datetime": "9999-01-01T00:00:00Z",
+        "description": "An Item with Machine Learning Model Extension metadata.",
+        "datetime": null,
+        "mlm:framework": "dfds",
+        "mlm:framework_version": "dsfs",
+        "mlm:memory_size": 1,
+        "mlm:batch_size_suggestion": 1,
+        "mlm:accelerator": "cuda",
+        "mlm:accelerator_constrained": false,
+        "mlm:accelerator_summary": "ds",
+        "mlm:accelerator_count": 1,
+        "mlm:name": "fdfs",
+        "mlm:architecture": "sdf",
+        "mlm:tasks": [
+            "scene-classification"
+        ],
+        "mlm:input": [
+            {
+                "name": "dsf",
+                "bands": [
+                    "dsf"
+                ],
+                "input": {
+                    "shape": [
+                        1,
+                        2,
+                        2,
+                        1
+                    ],
+                    "dim_order": [
+                        "dsfs",
+                        "sdf",
+                        "sdfdd",
+                        "sdfd"
+                    ],
+                    "data_type": "int32"
+                },
+                "norm_by_channel": false,
+                "norm_type": "z-score",
+                "statistics": [
+                    {
+                        "mean": 1.0,
+                        "stddev": 1.0
+                    }
+                ],
+                "pre_processing_function": null
+            }
+        ],
+        "mlm:output": [
+            {
+                "name": "dsfs",
+                "tasks": [
+                    "scene-classification"
+                ],
+                "result": {
+                    "shape": [
+                        1,
+                        1,
+                        1,
+                        1
+                    ],
+                    "dim_order": [
+                        "dsfs",
+                        "sdfdd",
+                        "sdfd",
+                        "dfsg"
+                    ],
+                    "data_type": "int32"
+                },
+                "classification:classes": [
+                    {
+                        "value": 1,
+                        "name": "cat",
+                        "description": "cat"
+                    }
+                ],
+                "post_processing_function": null
+            }
+        ],
+        "mlm:total_parameters": 1,
+        "mlm:pretrained": false,
+        "mlm:pretrained_source": "dsf"
+    },
+    "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+            [
+                [
+                    -7.882190080512502,
+                    37.13739173208318
+                ],
+                [
+                    -7.882190080512502,
+                    58.21798141355221
+                ],
+                [
+                    27.911651652899923,
+                    58.21798141355221
+                ],
+                [
+                    27.911651652899923,
+                    37.13739173208318
+                ],
+                [
+                    -7.882190080512502,
+                    37.13739173208318
+                ]
+            ]
+        ]
+    },
+    "links": [
+        {
+            "rel": "derived_from",
+            "href": "https://earth-search.aws.element84.com/v1/collections/sentinel-2-l2a",
+            "type": "application/json"
+        },
+        {
+            "rel": "self",
+            "href": "/Users/ryanavery/mlm-form/item.json",
+            "type": "application/json"
+        }
+    ],
+    "assets": {
+        "model": {
+            "href": "dsf",
+            "type": "sdfssd",
+            "title": "sf",
+            "mlm:artifact_type": "torch.jit.script",
+            "roles": [
+                "mlm:model",
+                "mlm:weights",
+                "mlm:checkpoint"
+            ]
+        }
+    },
+    "bbox": [
+        -7.882190080512502,
+        37.13739173208318,
+        27.911651652899923,
+        58.21798141355221
+    ],
+    "stac_extensions": [
+        "https://stac-extensions.github.io/file/v2.1.0/schema.json",
+        "https://crim-ca.github.io/mlm-extension/v1.2.0/schema.json"
+    ]
+}
