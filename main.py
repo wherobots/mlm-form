@@ -13,7 +13,7 @@ app, rt = fast_app(hdrs=(picolink))
 
 @app.get('/')
 def homepage(session):
-    
+
     return Body(
         Main(
             Header(
@@ -75,17 +75,11 @@ def submit(session, d: dict):
     session.setdefault('form_format_d', {})
     session['form_format_d'].update(copy.deepcopy(d))
     d = form_format_to_stac_format_input(d)
-    # fix??? preserves state when going back to mlm form but not assets
     session['stac_format_d'].update(d)
-    # this does not
     ml_model_metadata = construct_ml_model_properties(d)
     assets = construct_assets(session['stac_format_d'].get('assets'))
     item = create_pystac_item(ml_model_metadata, assets)
     return Div("Please fill in all required fields before submitting.", style='color: red;'), prettyJsonTemplate(item)
-    
-    # This preserves state
-    # session['stac_format_d'].update(d)
-    # return Div("Please fill in all required fields before submitting.", style='color: red;'), prettyJsonTemplate(session['stac_format_d'])
 
 roles = [role for role in model_asset_roles if role not in model_asset_implicit_roles]
 
@@ -106,11 +100,11 @@ def session_form(session, submitOnLoad=False):
                     selectCheckboxTemplate(label="Tasks", options=tasks, name="tasks", canValidateInline=False),
                     inputTemplate(label="Framework", name="framework", val='', input_type='text'),
                     inputTemplate(label="Framework Version", name="framework_version", val='', input_type='text'),
-                    inputTemplate(label="Memory Size", name="memory_size", val='', input_type='number'),
-                    inputTemplate(label="Total Parameters", name="total_parameters", val='', input_type='number'),
+                    inputTemplate(label="Memory Size", name="memory_size", val=1, input_type='number'),
+                    inputTemplate(label="Total Parameters", name="total_parameters", val=1, input_type='number'),
                     trueFalseRadioTemplate(label="Is it pretrained for one or more tasks and one or more data domains?", name="pretrained"),
                     inputTemplate(label="Pretrained source", name="pretrained_source", val='', input_type='text'),
-                    inputTemplate(label="Batch size suggestion", name="batch_size_suggestion", val='', input_type='number'),
+                    inputTemplate(label="Batch size suggestion", name="batch_size_suggestion", val=1, input_type='number'),
                     selectEnumTemplate(
                         label="Accelerator",
                         options=[task.value for task in AcceleratorEnum],
@@ -176,7 +170,7 @@ def submit_asset(session, d: dict):
     session['form_format_d']['assets'].update(copy.deepcopy(d))
     d['roles'] = model_asset_implicit_roles + [role for role in roles if d.pop(role, None)]
     d['type'] = d.pop('media_type')
-    session['stac_format_d']['assets'].update(d)
+    session['stac_format_d']['assets'].update(copy.deepcopy(d))
     # pystac doesn't directly support validating an asset, so put the asset inside a
     # dummy item and run the validation on that
     dummy_item = pystac.Item(
@@ -193,8 +187,6 @@ def submit_asset(session, d: dict):
     )
     dummy_item.assets["model"] = pystac.Asset.from_dict(d)
 
-    assets = construct_assets(session['stac_format_d'].get('assets'))
-
     try:
         validation_result = pystac.validation.validate(dummy_item)
     except pystac.errors.STACValidationError as e:
@@ -203,6 +195,6 @@ def submit_asset(session, d: dict):
             error_message = "The 'URI' field must be non-empty."
         else:
             error_message = f"STACValidationError: {error_message}".replace('\\n', '<br>')
-        return error_template(error_message), prettyJsonTemplate(assets["model"].to_dict())
-    return prettyJsonTemplate(assets["model"].to_dict())
+        return error_template(error_message), prettyJsonTemplate(dummy_item.assets['model'].to_dict())
+    return prettyJsonTemplate(dummy_item.assets['model'].to_dict())
 serve()

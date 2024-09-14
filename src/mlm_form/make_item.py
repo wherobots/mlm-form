@@ -48,8 +48,8 @@ def construct_ml_model_properties(d: Dict[str, Any]) -> MLModelProperties:
         bands=d['mlm_input_bands'],
         input=input_struct,
         norm_by_channel=(
-            None if d.get('mlm_input_norm_by_channel') is None 
-            else (True if d['mlm_input_norm_by_channel'].lower() == 'true' else False)
+            None if d.get('mlm_input_norm_by_channel') is None
+            else (True if d['mlm_input_norm_by_channel'] == 'true' else False)
         ),
         norm_type=d['mlm_input_norm_type'],
         resize_type=d['mlm_input_resize_type'],
@@ -102,14 +102,14 @@ def construct_ml_model_properties(d: Dict[str, Any]) -> MLModelProperties:
         framework_version=d['framework_version'],
         accelerator=d['accelerator'],
         accelerator_constrained=(
-            None if d.get('accelerator_constrained') is None 
-            else (True if d['accelerator_constrained'].lower() == 'true' else False)
+            None if d.get('accelerator_constrained') is None
+            else (True if d['accelerator_constrained'] == 'true' else False)
         ),
         accelerator_summary=d['accelerator_summary'],
         accelerator_count=d['accelerator_count'],
         memory_size=d['memory_size'],
         pretrained=(
-            None if d.get('pretrained') is None 
+            None if d.get('pretrained') is None
             else (True if d['pretrained'].lower() == 'true' else False)
         ),
         pretrained_source=d['pretrained_source'],

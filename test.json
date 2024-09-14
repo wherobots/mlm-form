@@ -8,7 +8,7 @@
         "description": "An Item with Machine Learning Model Extension metadata.",
         "datetime": null,
         "mlm:framework": "dfds",
-        "mlm:framework_version": "dsfs",
+        "mlm:framework_version": "2.3.0",
         "mlm:memory_size": 1,
         "mlm:batch_size_suggestion": 1,
         "mlm:accelerator": "cuda",
@@ -28,10 +28,10 @@
                 ],
                 "input": {
                     "shape": [
-                        1,
-                        2,
-                        2,
-                        1
+                        -1,
+                        13,
+                        64,
+                        64
                     ],
                     "dim_order": [
                         "dsfs",
@@ -41,7 +41,7 @@
                     ],
                     "data_type": "int32"
                 },
-                "norm_by_channel": false,
+                "norm_by_channel": true,
                 "norm_type": "z-score",
                 "statistics": [
                     {
