@@ -16,9 +16,6 @@ def homepage(session):
         Main(
             Header(
                 H1("Input Text with Session State and Fill Form"),
-                Nav(
-                    A("Page 2", href="/page_2")
-                )
             ),
             Section(
                 Button("Clear Form State", hx_post='/clear_form',
@@ -37,26 +34,6 @@ def clear_form(session):
     session.clear()
     return session_form(session)
 
-@app.get('/page_2')
-def page_2(session):
-    return Body(
-        Main(
-            Header(
-                H1("Page_2"),
-                Nav(
-                    A("Homepage", href="/")
-                )
-            ),
-            Section(
-                P("navigating to home and back doesn't fill form properly with ctrl+v")
-            ),
-            Grid(
-                session_form_2(session, submitOnLoad=True),
-                outputTemplate()
-            ),
-            style=main_element_style
-        )
-    )
 
 def prettyJsonTemplate(obj):
     return Pre(json.dumps(obj, indent = 4), style="margin-top: 25px; width: 100%;")
@@ -75,13 +52,7 @@ def inputTemplate(label, name, val, error_msg=None, input_type='text', canValida
 @app.post('/submit')
 def submit(session, d: dict):
     session.setdefault('form_data', {})
-    session['form_data'] = d
-    return prettyJsonTemplate(d)
-
-@app.post('/submit_2')
-def submit_2(session, d: dict):
-    session.setdefault('form_data', {})
-    session['form_data'] = d
+    session['form_data'].update(d)
     return prettyJsonTemplate(d)
 
 # helper function to render out the session form
@@ -95,17 +66,7 @@ def session_form(session, submitOnLoad=False):
     result = session.get('form_data', {})
     trigger = "input delay:200ms, load" if submitOnLoad and result else "input delay:200ms"
     session_form = Form(hx_post='/submit', hx_target='#result', hx_trigger=trigger, id="session_form", hx_swap_oob="#session_form")(
-                    inputTemplate(label="Text Input. Paste text and then refresh the page. fill form does not keep the pasted value.", val='', name="text_input"),
-                )
-    fill_form(session_form, result)
-    return session_form
-
-def session_form_2(session, submitOnLoad=False):
-    session.setdefault('form_data', {})
-    result = session.get('form_data', {})
-    trigger = "input delay:200ms, load" if submitOnLoad and result else "input delay:200ms"
-    session_form = Form(hx_post='/submit_2', hx_target='#result', hx_trigger=trigger, id="session_form_2", hx_swap_oob="#session_form_2")(
-                    inputTemplate(label="Text Input. Paste text and then refresh the page. fill form does not keep the pasted value.", val='', name="text_input"),
+                    inputTemplate(label="Text Input. Paste text and then refresh the page. fill form does not keep the pasted value if it is over 122 characters.", val='', name="text_input"),
                 )
     fill_form(session_form, result)
     return session_form
