@@ -1,6 +1,6 @@
 from fasthtml.common import *
 
-from mlm_form.session import load_session
+from src.mlm_form.session import load_session
 from src.mlm_form.styles import *
 from src.mlm_form.templates import *
 from src.mlm_form.validation import *
