@@ -38,7 +38,7 @@ def inputListTemplate(label, name, values=[None, None, None, None], error_msg=No
 def mk_opts(nm, cs):
     return (
         Option(f'-- select {nm} --', disabled='', selected='', value=''),
-        *map(Option, cs))
+        *map(lambda c: Option(c, value=c), cs))
 
 def selectEnumTemplate(label, options, name, error_msg=None, canValidateInline=False):
     return Div(hx_target='this', hx_swap='outerHTML', cls=f"{error_msg if error_msg else 'Valid'}", style=control_container_style)(
@@ -68,9 +68,9 @@ def trueFalseRadioTemplate(label, name, error_msg=None):
     return Div(
         labelDecoratorTemplate(Label(label), name in model_required_keys),
         Div(
-            Input(type="radio", name=name, value="true"),
+            Input(type="radio", name=f"{name}", value="true"),
             Label("True", for_=name),
-            Input(type="radio", name=name, value="false"),
+            Input(type="radio", name=f"{name}", value="false"),
             Label("False", for_=name),
             style="display: flex; flex-direction: row; align-items: center;"
         ),
@@ -89,17 +89,12 @@ def modelInputTemplate(label, name, error_msg=None):
             Label("Bands (enter a single comma separated list of values)"),
             Input(type="text", name=f"{name}_bands", style=text_input_style),
         ),
-        inputListTemplate(label="Shape", name=f"{name}_shape", error_msg=None, input_type='number'),
-        inputListTemplate(label="Dimension Order", name=f"{name}_dim_order", error_msg=None, input_type='text'),
-        Div(
-            Label("Data Type"),
-        Input(type="text", name=f"{name}_data_type", style=text_input_style),
-        ),
-        Div(
-            Label("Norm by Channel"),
-            CheckboxX(name=f"{name}_norm_by_channel"),
-            style="margin-bottom: 15px;"
-        ),
+        inputListTemplate(label="Input Dimension Sizes", name=f"{name}_shape", error_msg=None, input_type='number'),
+        inputListTemplate(label="Input Dimension Labels", name=f"{name}_dim_order", error_msg=None, input_type='text'),
+        selectEnumTemplate("Input Data Type", datatypes,
+            f"{name}_data_type", error_msg=None, canValidateInline=False),
+        trueFalseRadioTemplate("Normalize Each Channel By Statistics", f"{name}_norm_by_channel", error_msg=None)
+        ,
         selectEnumTemplate("Normalization Type", normalize_type_values,
             f"{name}_norm_type", error_msg=None, canValidateInline=False),
         Div(
@@ -109,8 +104,9 @@ def modelInputTemplate(label, name, error_msg=None):
         selectEnumTemplate("Resize Type", resize_type_values,
             f"{name}_resize_type", error_msg=None, canValidateInline=False),
         # TODO this should be made dynamic so that users can create a new field for a statistic and
-        # then enter an N length list of values for that statistic similar to 
+        # then enter an N length list of values for that statistic similar to
         # https://gallery.fastht.ml/start_simple/sqlite_todo/code
+        # TODO pasting causes issues compared with entering values one by one?
         Div(
             Label("Mean Statistic (enter a single comma separated list of values)"),
             Input(type="text", name=f"{name}_mean", style=text_input_style),
@@ -136,13 +132,12 @@ def modelOutputTemplate(label, name, error_msg=None):
         # TODO disabling this because we only work with models tha accept single outputs for now but
         # this should be flipped on and made working in the future
         #selectCheckboxTemplate(label="Tasks", options=tasks, name=f"{name}_tasks", canValidateInline=False),
-        inputListTemplate(label="Shape", name=f"{name}_shape", error_msg=None, input_type='number'),
-        inputListTemplate(label="Dimension Order", name=f"{name}_dim_order", error_msg=None, input_type='text'),
-        Div(
-        Label("Data Type"),
-        Input(type="text", name=f"{name}_data_type", style=text_input_style),
-        ),
-        # TODO this should be made dynamic so that users can enter an N length list of classes similar to 
+        inputListTemplate(label="Output Dimension Sizes", name=f"{name}_shape", error_msg=None, input_type='number'),
+        # TODO possibly overly restrictive schema, this can;t contain numeric characters
+        inputListTemplate(label="Output Dimension Labels", name=f"{name}_dim_order", error_msg=None, input_type='text'),
+        selectEnumTemplate("Output Data Type", datatypes,
+            f"{name}_data_type", error_msg=None, canValidateInline=False),
+        # TODO this should be made dynamic so that users can enter an N length list of classes similar to
         # https://gallery.fastht.ml/start_simple/sqlite_todo/code
         Div(
         Label("Categories (currently you must enter a single comma separated list of categories)"),
