@@ -1,5 +1,6 @@
 from fasthtml.common import *
 
+from src.mlm_form.session import load_session
 from src.mlm_form.styles import *
 from src.mlm_form.templates import *
 from src.mlm_form.validation import *
@@ -13,7 +14,7 @@ app, rt = fast_app(hdrs=(picolink))
 
 @app.get('/')
 def homepage(session):
-    
+    session = load_session(session)
     return Body(
         Main(
             Header(
@@ -37,6 +38,7 @@ def homepage(session):
 
 @app.post('/clear_form')
 def clear_form(session):
+    session = load_session(session)
     session.clear()
     return session_form(session)
 
@@ -63,6 +65,7 @@ def form_format_to_stac_format_input(d):
 
 @app.post('/submit')
 def submit(session, d: dict):
+    session = load_session(session)
     session.setdefault('stac_format_d', {})
     session.setdefault('form_format_d', {})
     session['form_format_d'].update(copy.deepcopy(d))
@@ -144,6 +147,7 @@ def session_asset_form(session, submitOnLoad=False):
 
 @app.get('/asset')
 def asset_homepage(session):
+    session = load_session(session)
     return Body(
         Main(
             Header(
@@ -165,6 +169,7 @@ def asset_homepage(session):
 
 @app.post('/submit_asset')
 def submit_asset(session, d: dict):
+    session = load_session(session)
     session['form_format_d']['assets'].update(copy.deepcopy(d))
     d['roles'] = model_asset_implicit_roles + [role for role in roles if d.pop(role, None)]
     d['type'] = d.pop('media_type')
