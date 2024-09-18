@@ -10,7 +10,7 @@ from datetime import datetime
 import pystac
 import copy
 
-app, rt = fast_app(hdrs=(picolink))
+app, rt = fast_app(hdrs=(picolink), sess_path='/home/rave/mlm_form')
 
 @app.get('/')
 def homepage(session):
@@ -98,16 +98,16 @@ def session_form(session, submitOnLoad=False):
     result = session.get('form_format_d', {})
     trigger = "input delay:200ms, load" if submitOnLoad and result else "input delay:200ms"
     session_form = Form(hx_post='/submit', hx_target='#result', hx_trigger=trigger, id="session_form", hx_swap_oob="#session_form")(
-                    inputTemplate(label="Model Name", name="model_name", val='', input_type='text'),
-                    inputTemplate(label="Architecture", name="architecture", val='', input_type='text'),
+                    inputTemplate(label="Model Name", name="model_name", placeholder="A unique identifier for your model", val='', input_type='text'),
+                    inputTemplate(label="Architecture", name="architecture", placeholder="A recognizable name for the model architecture", val='', input_type='text'),
                     selectCheckboxTemplate(label="Tasks", options=tasks, name="tasks", canValidateInline=False),
-                    inputTemplate(label="Framework", name="framework", val='', input_type='text'),
-                    inputTemplate(label="Framework Version", name="framework_version", val='', input_type='text'),
+                    inputTemplate(label="Framework", name="framework", placeholder='The name of the model framework e.g. "Pytorch"', val='', input_type='text'),
+                    inputTemplate(label="Framework Version", name="framework_version", placeholder="A version identifier e.g. 2.3.0", val='', input_type='text'),
                     inputTemplate(label="Memory Size", name="memory_size", val=1, input_type='number'),
                     inputTemplate(label="Total Parameters", name="total_parameters", val=1, input_type='number'),
                     trueFalseRadioTemplate(label="Is it pretrained for one or more tasks and one or more data domains?", name="pretrained"),
-                    inputTemplate(label="Pretrained source", name="pretrained_source", val='', input_type='text'),
-                    inputTemplate(label="Batch size suggestion", name="batch_size_suggestion", val=1, input_type='number'),
+                    inputTemplate(label="If pretrained, what dataset was used for pretraining?", name="pretrained_source", placeholder="A recognizable name for the dataset", val='', input_type='text'),
+                    inputTemplate(label="Suggested batch size for inference", name="batch_size_suggestion", val=1, input_type='number'),
                     selectEnumTemplate(
                         label="Accelerator",
                         options=[task.value for task in AcceleratorEnum],
@@ -116,7 +116,7 @@ def session_form(session, submitOnLoad=False):
                         canValidateInline=False
                     ),
                     trueFalseRadioTemplate(label="Accelerator constrained", name="accelerator_constrained"),
-                    inputTemplate(label="Accelerator Summary", name="accelerator_summary", val='', input_type='text'),
+                    inputTemplate(label="Accelerator Summary", name="accelerator_summary", placeholder='A description for the accelerator, e.g. "Nvidia A100"', val='', input_type='text'),
                     inputTemplate(label="Accelerator Count", name="accelerator_count", val=1, input_type='number'),
                     modelInputTemplate(label="MLM Input", name="mlm_input"),
                     modelOutputTemplate(label="MLM Output", name="mlm_output"),

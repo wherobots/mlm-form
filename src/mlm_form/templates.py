@@ -15,20 +15,20 @@ tasks = [task.value for task in TaskEnum]
 ### HTML Templates ###
 ######################
 
-def inputTemplate(label, name, val, error_msg=None, input_type='text', canValidateInline=False):
+def inputTemplate(label, name, val, placeholder=None, error_msg=None, input_type='text', canValidateInline=False):
     return Div(hx_target='this', hx_swap='outerHTML', cls=f"{error_msg if error_msg else 'Valid'}", style=control_container_style)(
                labelDecoratorTemplate(Label(label), name in model_required_keys),
-               Input(name=name,type=input_type,value=f'{val}',hx_post=f'/{name.lower()}' if canValidateInline else None, style=text_input_style),
+               Input(name=name,type=input_type, placeholder=placeholder, value=f'{val}',hx_post=f'/{name.lower()}' if canValidateInline else None, style=text_input_style),
                Div(f'{error_msg}', style='color: red;') if error_msg else None)
 
-def inputListTemplate(label, name, values=[None, None, None, None], error_msg=None, input_type='number', canValidateInline=False):
+def inputListTemplate(label, name, placeholder=None, values=[None, None, None, None], error_msg=None, input_type='number', canValidateInline=False):
     return Div(hx_target='this', hx_swap='outerHTML', cls=f"{error_msg if error_msg else 'Valid'}", style=control_container_style)(
         labelDecoratorTemplate(Label(label), name in model_required_keys),
         Div(style="display: flex; gap: 20px; justify-content: flex-start; width: 100%; max-width: 600px;")(
             *[
                 Input(name=f'{name.lower()}_{i+1}', id=f'{name.lower()}_{i+1}',
-                      placeholder=f"Enter {label} {i+1}", type=input_type, value=val,
-                      style="width: 120px;", hx_post=f'/{name.lower()}' if canValidateInline else None)
+                      placeholder=placeholder, type=input_type, value=val,
+                      style="width: 160px;", hx_post=f'/{name.lower()}' if canValidateInline else None)
                 for i, val in enumerate(values)
             ]
         ),
@@ -83,37 +83,46 @@ def modelInputTemplate(label, name, error_msg=None):
         labelDecoratorTemplate(H4(label, style="margin-left: -30px;"), name in model_required_keys),
         Div(
             Label("Name"),
-            Input(type="text", name=f"{name}_name", style=text_input_style)
+            Input(type="text", name=f"{name}_name", placeholder="A descriptive name for the model input", style=text_input_style)
         ),
         Div(
             Label("Bands (enter a single comma separated list of values)"),
-            Input(type="text", name=f"{name}_bands", style=text_input_style),
+            Input(type="text", name=f"{name}_bands", placeholder='''e.g. B01,B02,B03,B04,B05,B06,B07,B08,B8A,B09,B10,B11,B12''',
+                style=text_input_style),
         ),
-        inputListTemplate(label="Input Dimension Sizes", name=f"{name}_shape", error_msg=None, input_type='number'),
-        inputListTemplate(label="Input Dimension Labels", name=f"{name}_dim_order", error_msg=None, input_type='text'),
+        inputListTemplate(label="Input Dimension Sizes", placeholder="Enter Value", name=f"{name}_shape", error_msg=None, input_type='number'),
+        inputListTemplate(label="Input Dimension Labels", placeholder="Enter Text Label", name=f"{name}_dim_order", error_msg=None, input_type='text'),
         selectEnumTemplate("Input Data Type", datatypes,
             f"{name}_data_type", error_msg=None, canValidateInline=False),
-        trueFalseRadioTemplate("Normalize Each Channel By Statistics", f"{name}_norm_by_channel", error_msg=None)
-        ,
+        trueFalseRadioTemplate("Normalize Each Channel By Statistics", f"{name}_norm_by_channel", error_msg=None),
         selectEnumTemplate("Normalization Type", normalize_type_values,
             f"{name}_norm_type", error_msg=None, canValidateInline=False),
-        Div(
-            Label("Norm Clip"),
-            Input(type="text", name=f"{name}_norm_clip", style=text_input_style),
-        ),
         selectEnumTemplate("Resize Type", resize_type_values,
             f"{name}_resize_type", error_msg=None, canValidateInline=False),
-        # TODO this should be made dynamic so that users can create a new field for a statistic and
-        # then enter an N length list of values for that statistic similar to
-        # https://gallery.fastht.ml/start_simple/sqlite_todo/code
-        # TODO pasting causes issues compared with entering values one by one?
         Div(
             Label("Mean Statistic (enter a single comma separated list of values)"),
-            Input(type="text", name=f"{name}_mean", style=text_input_style),
+            Input(type="text", name=f"{name}_mean", 
+                  placeholder='''e.g. 1354.40546513, 1118.24399958, 1042.92983953, 947.62620298,
+                                        1199.47283961, 1999.79090914, 2369.22292565,
+                                        2296.82608323, 732.08340178, 12.11327804,
+                                        1819.01027855, 1118.92391149, 2594.14080798''',
+                                        style=text_input_style),
         ),
         Div(
             Label("Std Statistic (enter a single comma separated list of values)"),
-            Input(type="text", name=f"{name}_std", style=text_input_style),
+            Input(type="text", name=f"{name}_std", 
+                  placeholder='''e.g. 245.71762908, 333.00778264, 395.09249139,
+                                    593.75055589,
+                                    566.4170017,
+                                    861.18399006,
+                                    1086.63139075,
+                                    1117.98170791,
+                                    404.91978886,
+                                    4.77584468,
+                                    1002.58768311,
+                                    761.30323499,
+                                    1231.58581042''',
+                                    style=text_input_style),
 
         ),
         Div(f'{error_msg}', style='color: red;') if error_msg else None,
@@ -127,21 +136,22 @@ def modelOutputTemplate(label, name, error_msg=None):
         labelDecoratorTemplate(H4(label, style="margin-left: -30px;"), name in model_required_keys),
         Div(
             Label("Name"),
-            Input(type="text", name=f"{name}_name", style=text_input_style)
+            Input(type="text", name=f"{name}_name", placeholder="A descriptive name of the model output content", style=text_input_style)
         ),
         # TODO disabling this because we only work with models tha accept single outputs for now but
         # this should be flipped on and made working in the future
         #selectCheckboxTemplate(label="Tasks", options=tasks, name=f"{name}_tasks", canValidateInline=False),
-        inputListTemplate(label="Output Dimension Sizes", name=f"{name}_shape", error_msg=None, input_type='number'),
+        inputListTemplate(label="Output Dimension Sizes", name=f"{name}_shape", placeholder="Enter Value", error_msg=None, input_type='number'),
         # TODO possibly overly restrictive schema, this can;t contain numeric characters
-        inputListTemplate(label="Output Dimension Labels", name=f"{name}_dim_order", error_msg=None, input_type='text'),
+        inputListTemplate(label="Output Dimension Labels", name=f"{name}_dim_order", placeholder="Enter Text Label", error_msg=None, input_type='text'),
         selectEnumTemplate("Output Data Type", datatypes,
             f"{name}_data_type", error_msg=None, canValidateInline=False),
         # TODO this should be made dynamic so that users can enter an N length list of classes similar to
         # https://gallery.fastht.ml/start_simple/sqlite_todo/code
         Div(
         Label("Categories (currently you must enter a single comma separated list of categories)"),
-        Input(type="text", name=f"{name}_classes", style=text_input_style),
+        Input(type="text", name=f"{name}_classes", placeholder=''' e.g. "Annual Crop, Forest, Herbaceous Vegetation, Highway, Industrial Buildings, Pasture, Permanent Crop, Residential Buildings, River, SeaLake"''',
+               style=text_input_style),
         ),
         Div(f'{error_msg}', style='color: red;') if error_msg else None,
         style=f'{control_container_style} margin-left: 30px;'
