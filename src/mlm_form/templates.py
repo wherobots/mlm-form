@@ -149,7 +149,7 @@ def modelOutputTemplate(label, name, error_msg=None):
         # TODO this should be made dynamic so that users can enter an N length list of classes similar to
         # https://gallery.fastht.ml/start_simple/sqlite_todo/code
         Div(
-        Label("Categories (currently you must enter a single comma separated list of categories)"),
+        Label("Classes (enter a single comma separated list of classes)"),
         Input(type="text", name=f"{name}_classes", placeholder=''' e.g. "Annual Crop, Forest, Herbaceous Vegetation, Highway, Industrial Buildings, Pasture, Permanent Crop, Residential Buildings, River, SeaLake"''',
                style=text_input_style),
         ),

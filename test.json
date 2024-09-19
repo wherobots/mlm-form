@@ -7,24 +7,36 @@
         "end_datetime": "9999-01-01T00:00:00Z",
         "description": "An Item with Machine Learning Model Extension metadata.",
         "datetime": null,
-        "mlm:framework": "dfds",
+        "mlm:framework": "Pytorch",
         "mlm:framework_version": "2.3.0",
         "mlm:memory_size": 1,
-        "mlm:batch_size_suggestion": 1,
+        "mlm:batch_size_suggestion": 3300,
         "mlm:accelerator": "cuda",
-        "mlm:accelerator_constrained": false,
-        "mlm:accelerator_summary": "ds",
+        "mlm:accelerator_constrained": true,
+        "mlm:accelerator_summary": "",
         "mlm:accelerator_count": 1,
-        "mlm:name": "fdfs",
-        "mlm:architecture": "sdf",
+        "mlm:name": "Eurosat classifier",
+        "mlm:architecture": "Resnet-18",
         "mlm:tasks": [
             "scene-classification"
         ],
         "mlm:input": [
             {
-                "name": "dsf",
+                "name": "Sentinel-2 13 band input",
                 "bands": [
-                    "dsf"
+                    "\"B01\"",
+                    "\"B02\"",
+                    "\"B03\"",
+                    "\"B04\"",
+                    "\"B05\"",
+                    "\"B06\"",
+                    "\"B07\"",
+                    "\"B08\"",
+                    "\"B8A\"",
+                    "\"B09\"",
+                    "\"B10\"",
+                    "\"B11\"",
+                    "\"B12\""
                 ],
                 "input": {
                     "shape": [
@@ -34,19 +46,68 @@
                         64
                     ],
                     "dim_order": [
-                        "dsfs",
-                        "sdf",
-                        "sdfdd",
-                        "sdfd"
+                        "batch",
+                        "channel",
+                        "height",
+                        "width"
                     ],
-                    "data_type": "int32"
+                    "data_type": "int8"
                 },
                 "norm_by_channel": true,
                 "norm_type": "z-score",
+                "resize_type": "crop",
                 "statistics": [
                     {
-                        "mean": 1.0,
-                        "stddev": 1.0
+                        "mean": 1354.40546513,
+                        "stddev": 245.71762908
+                    },
+                    {
+                        "mean": 1118.24399958,
+                        "stddev": 333.00778264
+                    },
+                    {
+                        "mean": 1042.92983953,
+                        "stddev": 395.09249139
+                    },
+                    {
+                        "mean": 947.62620298,
+                        "stddev": 593.75055589
+                    },
+                    {
+                        "mean": 1199.47283961,
+                        "stddev": 566.4170017
+                    },
+                    {
+                        "mean": 1999.79090914,
+                        "stddev": 861.18399006
+                    },
+                    {
+                        "mean": 2369.22292565,
+                        "stddev": 1086.63139075
+                    },
+                    {
+                        "mean": 2296.82608323,
+                        "stddev": 1117.98170791
+                    },
+                    {
+                        "mean": 732.08340178,
+                        "stddev": 404.91978886
+                    },
+                    {
+                        "mean": 12.11327804,
+                        "stddev": 4.77584468
+                    },
+                    {
+                        "mean": 1819.01027855,
+                        "stddev": 1002.58768311
+                    },
+                    {
+                        "mean": 1118.92391149,
+                        "stddev": 761.30323499
+                    },
+                    {
+                        "mean": 2594.14080798,
+                        "stddev": 1231.58581042
                     }
                 ],
                 "pre_processing_function": null
@@ -54,38 +115,83 @@
         ],
         "mlm:output": [
             {
-                "name": "dsfs",
+                "name": "classification result",
                 "tasks": [
                     "scene-classification"
                 ],
                 "result": {
                     "shape": [
-                        1,
-                        1,
-                        1,
-                        1
+                        -1,
+                        10,
+                        "",
+                        ""
                     ],
                     "dim_order": [
-                        "dsfs",
-                        "sdfdd",
-                        "sdfd",
-                        "dfsg"
+                        "batch",
+                        "categories",
+                        "",
+                        ""
                     ],
-                    "data_type": "int32"
+                    "data_type": "float32"
                 },
                 "classification:classes": [
                     {
                         "value": 1,
-                        "name": "cat",
-                        "description": "cat"
+                        "name": "Annual Crop",
+                        "description": "Annual Crop"
+                    },
+                    {
+                        "value": 2,
+                        "name": "Forest",
+                        "description": "Forest"
+                    },
+                    {
+                        "value": 3,
+                        "name": "Herbaceous Vegetation",
+                        "description": "Herbaceous Vegetation"
+                    },
+                    {
+                        "value": 4,
+                        "name": "Highway",
+                        "description": "Highway"
+                    },
+                    {
+                        "value": 5,
+                        "name": "Industrial Buildings",
+                        "description": "Industrial Buildings"
+                    },
+                    {
+                        "value": 6,
+                        "name": "Pasture",
+                        "description": "Pasture"
+                    },
+                    {
+                        "value": 7,
+                        "name": "Permanent Crop",
+                        "description": "Permanent Crop"
+                    },
+                    {
+                        "value": 8,
+                        "name": "Residential Buildings",
+                        "description": "Residential Buildings"
+                    },
+                    {
+                        "value": 9,
+                        "name": "River",
+                        "description": "River"
+                    },
+                    {
+                        "value": 10,
+                        "name": "SeaLake",
+                        "description": "SeaLake"
                     }
                 ],
                 "post_processing_function": null
             }
         ],
         "mlm:total_parameters": 1,
-        "mlm:pretrained": false,
-        "mlm:pretrained_source": "dsf"
+        "mlm:pretrained": true,
+        "mlm:pretrained_source": "SSL4EO-S2 and Eurosat"
     },
     "geometry": {
         "type": "Polygon",
@@ -122,20 +228,18 @@
         },
         {
             "rel": "self",
-            "href": "/Users/ryanavery/mlm-form/item.json",
+            "href": "/home/rave/mlm-form/item.json",
             "type": "application/json"
         }
     ],
     "assets": {
         "model": {
-            "href": "dsf",
-            "type": "sdfssd",
-            "title": "sf",
+            "href": "s3://wherobots-modelhub-staging/community/classification/landcover-eurosat-sentinel2/scripting/model.pt",
+            "type": "",
+            "title": "Model File",
             "mlm:artifact_type": "torch.jit.script",
             "roles": [
-                "mlm:model",
-                "mlm:weights",
-                "mlm:checkpoint"
+                "mlm:model"
             ]
         }
     },
