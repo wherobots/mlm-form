@@ -7,7 +7,11 @@ from uuid import uuid4
 # put a max of 100 active sessions to avoid unbounded memory usage.
 @lru_cache(maxsize=100)
 def get_session_by_id(id):
-    return dict()
+    session = dict()
+    session.setdefault("stac_format_d", {})
+    session.setdefault("form_format_d", {})
+    session["form_format_d"].setdefault("assets", {})
+    return session
 
 
 def load_session(fasthtml_session):
