@@ -146,12 +146,13 @@ def labelDecoratorTemplate(label, isRequired):
 
 def outputTemplate():
     return Div(
-        Div(json, id="result", style="position: fixed; right: 50px; width: 500px; height: calc(100vh - 250px); overflow: auto;"),
+        Div(id="result", style="position: fixed; right: 50px; width: 500px; height: calc(100vh - 250px); overflow: auto;"),
         style="position: relative;"
     )
 
 def prettyJsonTemplate(obj):
-    return Pre(json.dumps(obj, indent = 4), style="margin-top: 25px; width: 100%;")
+    return Div(Div(Pre(json.dumps(obj, indent = 4), style="margin-top: 25px; width: 100%;"),
+               style="position: fixed; right: 50px; width: 500px; height: calc(100vh - 250px); overflow: auto;", id='#result'), style="position: relative;")
 
 def error_template(msg):
     return  Div(msg, style='color: red; white-space: pre-wrap; margin-left: 10px; margin-bottom: 15px; text-indent: -10px;')
