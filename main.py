@@ -87,7 +87,7 @@ def submit(session, d: dict):
     ml_model_metadata = construct_ml_model_properties(d)
     assets = construct_assets(session['stac_format_d'].get('assets'))
     item = create_pystac_item(ml_model_metadata, assets)
-    return Div("Please fill in all required fields before submitting.", style='color: red;'), prettyJsonTemplate(item)
+    return session_form(session), Div("Please fill in all required fields before submitting.", style='color: red;'), prettyJsonTemplate(item)
 
 roles = [role for role in model_asset_roles if role not in model_asset_implicit_roles]
 
@@ -102,7 +102,7 @@ def session_form(session, submitOnLoad=False):
     session.setdefault('form_format_d', {})
     result = session.get('form_format_d', {})
     trigger = "input delay:200ms, load" if submitOnLoad and result else "input delay:200ms"
-    session_form = Form(hx_post='/submit', hx_target='#result', hx_trigger=trigger, id="session_form", hx_swap_oob="#session_form")(
+    session_form = Form(hx_post='/submit', hx_target="#page", hx_trigger=trigger, id="session_form", hx_swap_oob="#session_form")(
                     inputTemplate(label="Model Name", name="model_name", placeholder="A unique identifier for your model", val='', input_type='text'),
                     inputTemplate(label="Architecture", name="architecture", placeholder="A recognizable name for the model architecture", val='', input_type='text'),
                     selectCheckboxTemplate(label="Tasks", options=tasks, name="tasks", canValidateInline=False),
@@ -123,56 +123,11 @@ def session_form(session, submitOnLoad=False):
                     trueFalseRadioTemplate(label="Accelerator constrained", name="accelerator_constrained"),
                     inputTemplate(label="Accelerator Summary", name="accelerator_summary", placeholder='A description for the accelerator, e.g. "Nvidia A100"', val='', input_type='text'),
                     inputTemplate(label="Accelerator Count", name="accelerator_count", val=1, input_type='number'),
-                    modelInputTemplate(label="MLM Input", name="mlm_input"),
+                    modelInputTemplate(label="MLM Input", name="mlm_input", form_data=result),
                     modelOutputTemplate(label="MLM Output", name="mlm_output"),
                 )
     fill_form(session_form, result)
     return session_form
-
-@app.get('/get_statistics')
-def update_statistics_by_norm(mlm_input_norm_type: str):
-    if mlm_input_norm_type == 'none':
-        return Div(name='statistics')
-    elif mlm_input_norm_type == 'z-score':
-        return  Div(Div(
-                Label("Mean Statistic (enter a single comma separated list of values)"),
-                Input(type="text", name=f"mlm_input_mean", 
-                    placeholder='''e.g. 1354.40546513, 1118.24399958, 1042.92983953, 947.62620298,
-                                            1199.47283961, 1999.79090914, 2369.22292565,
-                                            2296.82608323, 732.08340178, 12.11327804,
-                                            1819.01027855, 1118.92391149, 2594.14080798''',
-                                            style=text_input_style),
-            ),
-            Div(
-                Label("Std Statistic (enter a single comma separated list of values)"),
-                Input(type="text", name=f"mlm_input_std", 
-                    placeholder='''e.g. 245.71762908, 333.00778264, 395.09249139,
-                                        593.75055589,
-                                        566.4170017,
-                                        861.18399006,
-                                        1086.63139075,
-                                        1117.98170791,
-                                        404.91978886,
-                                        4.77584468,
-                                        1002.58768311,
-                                        761.30323499,
-                                        1231.58581042''',
-                                        style=text_input_style),
-
-            ), name='statistics')
-    elif mlm_input_norm_type == 'min-max':
-        return  Div(
-                Div(
-                Label("Min Statistic (enter a single comma separated list of values)"),
-                Input(type="text", name=f"mlm_input_min", 
-                    placeholder='''e.g. ....''', style=text_input_style)),
-                Div(
-                Label("Max Statistic (enter a single comma separated list of values)"),
-                Input(type="text", name=f"mlm_input_max", 
-                    placeholder='''e.g. ....''', style=text_input_style)),
-                name='statistics')
-    else:
-        return Div(name='statistics')
 
 def session_asset_form(session, submitOnLoad=False):
     session.setdefault('stac_format_d', {})
