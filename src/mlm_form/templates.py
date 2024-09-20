@@ -40,13 +40,15 @@ def mk_opts(nm, cs):
         Option(f'-- select {nm} --', disabled='', selected='', value=''),
         *map(lambda c: Option(c, value=c), cs))
 
-def selectEnumTemplate(label, options, name, error_msg=None, canValidateInline=False):
+def selectEnumTemplate(label, options, name, get=None, hx_target=None, error_msg=None, canValidateInline=False):
     return Div(hx_target='this', hx_swap='outerHTML', cls=f"{error_msg if error_msg else 'Valid'}", style=control_container_style)(
         labelDecoratorTemplate(Label(label), name in model_required_keys),
         Select(
             *mk_opts(name, options),
             name=name,
             hx_post=f'/{name.lower()}' if canValidateInline else None,
+            get=get,
+            hx_target=hx_target,
             style=select_input_style),
         Div(f'{error_msg}', style='color: red;') if error_msg else None)
 
@@ -95,36 +97,16 @@ def modelInputTemplate(label, name, error_msg=None):
         selectEnumTemplate("Input Data Type", datatypes,
             f"{name}_data_type", error_msg=None, canValidateInline=False),
         trueFalseRadioTemplate("Normalize Each Channel By Statistics", f"{name}_norm_by_channel", error_msg=None),
+        ## TODO this isn't working route not found
+        Div(
         selectEnumTemplate("Normalization Type", normalize_type_values,
-            f"{name}_norm_type", error_msg=None, canValidateInline=False),
+            f"{name}_norm_type", get="get_statistics", hx_target="#statistics", error_msg=None, canValidateInline=False),
+        Label("Statistics"),
+        Div(Div(id='statistics')),
+        ),
+
         selectEnumTemplate("Resize Type", resize_type_values,
             f"{name}_resize_type", error_msg=None, canValidateInline=False),
-        Div(
-            Label("Mean Statistic (enter a single comma separated list of values)"),
-            Input(type="text", name=f"{name}_mean", 
-                  placeholder='''e.g. 1354.40546513, 1118.24399958, 1042.92983953, 947.62620298,
-                                        1199.47283961, 1999.79090914, 2369.22292565,
-                                        2296.82608323, 732.08340178, 12.11327804,
-                                        1819.01027855, 1118.92391149, 2594.14080798''',
-                                        style=text_input_style),
-        ),
-        Div(
-            Label("Std Statistic (enter a single comma separated list of values)"),
-            Input(type="text", name=f"{name}_std", 
-                  placeholder='''e.g. 245.71762908, 333.00778264, 395.09249139,
-                                    593.75055589,
-                                    566.4170017,
-                                    861.18399006,
-                                    1086.63139075,
-                                    1117.98170791,
-                                    404.91978886,
-                                    4.77584468,
-                                    1002.58768311,
-                                    761.30323499,
-                                    1231.58581042''',
-                                    style=text_input_style),
-
-        ),
         Div(f'{error_msg}', style='color: red;') if error_msg else None,
         style=f'{control_container_style} margin-left: 30px;'
     )
