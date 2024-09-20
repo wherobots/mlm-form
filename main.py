@@ -102,7 +102,7 @@ def session_form(session, submitOnLoad=False):
     session.setdefault('form_format_d', {})
     result = session.get('form_format_d', {})
     trigger = "input delay:200ms, load" if submitOnLoad and result else "input delay:200ms"
-    session_form = Form(hx_post='/submit', hx_target="#page", hx_trigger=trigger, id="session_form", hx_swap_oob="#session_form")(
+    session_form = Form(hx_post='/submit', hx_trigger=trigger, id="session_form", hx_swap_oob="#session_form")(
                     inputTemplate(label="Model Name", name="model_name", placeholder="A unique identifier for your model", val='', input_type='text'),
                     inputTemplate(label="Architecture", name="architecture", placeholder="A recognizable name for the model architecture", val='', input_type='text'),
                     selectCheckboxTemplate(label="Tasks", options=tasks, name="tasks", canValidateInline=False),
