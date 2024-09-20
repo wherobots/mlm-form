@@ -30,6 +30,7 @@ def homepage(session):
             ),
             Grid(
                 session_form(session, submitOnLoad=True),
+                outputTemplate(),
                 id="page"
             ),
             style=main_element_style
@@ -87,7 +88,7 @@ def submit(session, d: dict):
     ml_model_metadata = construct_ml_model_properties(d)
     assets = construct_assets(session['stac_format_d'].get('assets'))
     item = create_pystac_item(ml_model_metadata, assets)
-    return session_form(session), Div("Please fill in all required fields before submitting.", style='color: red;'), prettyJsonTemplate(item)
+    return session_form(session), prettyJsonTemplate(item)
 
 roles = [role for role in model_asset_roles if role not in model_asset_implicit_roles]
 
@@ -102,7 +103,7 @@ def session_form(session, submitOnLoad=False):
     session.setdefault('form_format_d', {})
     result = session.get('form_format_d', {})
     trigger = "input delay:200ms, load" if submitOnLoad and result else "input delay:200ms"
-    session_form = Form(hx_post='/submit', hx_target='#page', hx_trigger=trigger, id="session_form", hx_swap_oob="#session_form")(
+    session_form = Form(hx_post='/submit', hx_target='#result', hx_trigger=trigger, id="session_form", hx_swap_oob="#session_form")(
                     inputTemplate(label="Model Name", name="model_name", placeholder="A unique identifier for your model", val='', input_type='text'),
                     inputTemplate(label="Architecture", name="architecture", placeholder="A recognizable name for the model architecture", val='', input_type='text'),
                     selectCheckboxTemplate(label="Tasks", options=tasks, name="tasks", canValidateInline=False),
