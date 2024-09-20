@@ -60,6 +60,8 @@ def form_format_to_stac_format_input(d):
     d['mlm_output_classes'] = [item.strip() for item in d.get('mlm_output_classes', '').split(',')]
     d['mlm_input_mean'] = [float(item.strip()) if item != '' else [''] for item in d.get('mlm_input_mean', '').split(',')]
     d['mlm_input_std'] = [float(item.strip()) if item != '' else [''] for item in d.get('mlm_input_std', '').split(',')]
+    d['mlm_input_min'] = [float(item.strip()) if item != '' else [''] for item in d.get('mlm_input_min', '').split(',')]
+    d['mlm_input_max'] = [float(item.strip()) if item != '' else [''] for item in d.get('mlm_input_max', '').split(',')]
     d['mlm_input_bands'] = [item.strip() if item != '' else [''] for item in d.get('mlm_input_bands', '').split(',')]
     # from the fasthtml discord https://discordapp.com/channels/689892369998676007/1247700012952191049/1273789690691981412
     # this might change past version 0.4.4 it seems pretty hacky
@@ -130,7 +132,7 @@ def session_form(session, submitOnLoad=False):
     return session_form
 
 @app.get('/get_statistics')
-def update_statistics_by_norm(mlm_input_norm_type: str):
+def get_statistics(mlm_input_norm_type: str):
     if mlm_input_norm_type == 'none':
         return Div(name='statistics')
     elif mlm_input_norm_type == 'z-score':

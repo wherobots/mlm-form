@@ -101,8 +101,7 @@ def modelInputTemplate(label, name, error_msg=None):
         Div(
         selectEnumTemplate("Normalization Type", normalize_type_values,
             f"{name}_norm_type", get="get_statistics", hx_target="#statistics", error_msg=None, canValidateInline=False),
-        Label("Statistics"),
-        Div(Div(id='statistics')),
+        Div(id='statistics'),
         ),
 
         selectEnumTemplate("Resize Type", resize_type_values,
