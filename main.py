@@ -4,11 +4,12 @@ from src.mlm_form.session import load_session
 from src.mlm_form.styles import *
 from src.mlm_form.templates import *
 from src.mlm_form.validation import *
-from src.mlm_form.make_item import construct_ml_model_properties, construct_assets, create_pystac_item
+from src.mlm_form.make_item import construct_ml_model_properties, construct_ml_model_properties_and_validate, construct_assets, create_pystac_item
 from stac_model.runtime import AcceleratorEnum
 from datetime import datetime
 import pystac
 import copy
+from pydantic import ValidationError
 
 app, rt = fast_app(hdrs=(picolink), sess_path='/home/rave/mlm_form')
 
@@ -69,6 +70,9 @@ def form_format_to_stac_format_input(d):
     d['memory_size'] = int(d.get('memory_size', 1))
     d['total_parameters'] = int(d.get('total_parameters', 1))
     d['batch_size_suggestion'] = int(d.get('batch_size_suggestion', 1))
+    # remove empty string entries TODO change when this field is made flexible n length
+    d['mlm_output_shape'] = [item for item in d['mlm_output_shape'] if item]
+    d['mlm_output_dim_order'] = [item for item in d['mlm_output_dim_order'] if item]
     return d
 
 @app.post('/submit')
@@ -79,7 +83,10 @@ def submit(session, d: dict):
     session['form_format_d'].update(copy.deepcopy(d))
     d = form_format_to_stac_format_input(d)
     session['stac_format_d'].update(d)
-    ml_model_metadata = construct_ml_model_properties(d)
+    try:
+        ml_model_metadata = construct_ml_model_properties_and_validate(d)
+    except ValidationError as e:
+        ml_model_metadata = construct_ml_model_properties(d)
     assets = construct_assets(session['stac_format_d'].get('assets'))
     item = create_pystac_item(ml_model_metadata, assets)
     return Div("Please fill in all required fields before submitting.", style='color: red;'), prettyJsonTemplate(item)
