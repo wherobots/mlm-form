@@ -69,6 +69,8 @@ def form_format_to_stac_format_input(d):
     d['memory_size'] = int(d.get('memory_size', 1))
     d['total_parameters'] = int(d.get('total_parameters', 1))
     d['batch_size_suggestion'] = int(d.get('batch_size_suggestion', 1))
+    d['mlm_output_shape'] = [item for item in d['mlm_output_shape'] if item]
+    d['mlm_output_dim_order'] = [item for item in d['mlm_output_dim_order'] if item]
     return d
 
 @app.post('/submit')

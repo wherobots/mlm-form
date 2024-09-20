@@ -122,15 +122,11 @@
                 "result": {
                     "shape": [
                         -1,
-                        10,
-                        "",
-                        ""
+                        10
                     ],
                     "dim_order": [
                         "batch",
-                        "categories",
-                        "",
-                        ""
+                        "categories"
                     ],
                     "data_type": "float32"
                 },
