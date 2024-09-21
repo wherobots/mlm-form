@@ -7,18 +7,17 @@ from stac_model.input import NormalizeType, ResizeType
 from typing import get_args
 from stac_model.base import TaskEnum
 
- # idk what Typing.Literal is or why I need to do this :(
+# idk what Typing.Literal is or why I need to do this :(
 normalize_type_values = [value for value in get_args(get_args(NormalizeType)[0])]
 resize_type_values = [value for value in get_args(get_args(ResizeType)[0])]
 tasks = [task.value for task in TaskEnum]
 ######################
 ### HTML Templates ###
 ######################
-
 def inputTemplate(label, name, val, placeholder=None, error_msg=None, input_type='text', canValidateInline=False):
     return Div(hx_target='this', hx_swap='outerHTML', cls=f"{error_msg if error_msg else 'Valid'}", style=control_container_style)(
                labelDecoratorTemplate(Label(label), name in model_required_keys),
-               Input(id=name, name=name,type=input_type, placeholder=placeholder, value=f'{val}',hx_post=f'/{name.lower()}' if canValidateInline else None, style=text_input_style),
+               Input(id=name, name=name, type=input_type, placeholder=placeholder, value=f'{val}', hx_post=f'/{name.lower()}' if canValidateInline else None, style=text_input_style),
                Div(f'{error_msg}', style='color: red;') if error_msg else None)
 
 def inputListTemplate(label, name, placeholder=None, values=[None, None, None, None], error_msg=None, input_type='number', canValidateInline=False):
@@ -46,6 +45,7 @@ def selectEnumTemplate(label, options, name, get=None, hx_target=None, error_msg
         Select(
             *mk_opts(name, options),
             name=name,
+            id=name,
             hx_post=f'/{name.lower()}' if canValidateInline else None,
             get=get,
             hx_target=hx_target,
@@ -63,6 +63,7 @@ def selectCheckboxTemplate(label, options, name, error_msg=None, canValidateInli
         Group(
             mk_checkbox(options),
             name=name,
+            id=name,
             hx_post=f'/{name.lower()}' if canValidateInline else None),
         Div(f'{error_msg}', style='color: red;') if error_msg else None)
 
@@ -70,10 +71,10 @@ def trueFalseRadioTemplate(label, name, error_msg=None):
     return Div(
         labelDecoratorTemplate(Label(label), name in model_required_keys),
         Div(
-            Input(type="radio", name=f"{name}", value="true"),
-            Label("True", for_=name),
-            Input(type="radio", name=f"{name}", value="false"),
-            Label("False", for_=name),
+            Input(type="radio", name=f"{name}", id=f"{name}_true", value="true"),
+            Label("True", for_=f"{name}_true"),
+            Input(type="radio", name=f"{name}", id=f"{name}_false", value="false"),
+            Label("False", for_=f"{name}_false"),
             style="display: flex; flex-direction: row; align-items: center;"
         ),
         Div(f'{error_msg}', style='color: red;') if error_msg else None,
@@ -86,11 +87,11 @@ def modelInputTemplate(label, name, form_data, error_msg=None):
         labelDecoratorTemplate(H4(label, style="margin-left: -30px;"), name in model_required_keys),
         Div(
             Label("Name"),
-            Input(type="text", name=f"{name}_name", placeholder="A descriptive name for the model input", style=text_input_style)
+            Input(type="text", name=f"{name}_name", id=f"{name}_name", placeholder="A descriptive name for the model input", style=text_input_style)
         ),
         Div(
             Label("Bands (enter a single comma separated list of values)"),
-            Input(type="text", name=f"{name}_bands", placeholder='''e.g. B01,B02,B03,B04,B05,B06,B07,B08,B8A,B09,B10,B11,B12''',
+            Input(type="text", name=f"{name}_bands", id=f"{name}_bands", placeholder='''e.g. B01,B02,B03,B04,B05,B06,B07,B08,B8A,B09,B10,B11,B12''',
                 style=text_input_style),
         ),
         inputListTemplate(label="Input Dimension Sizes", placeholder="Enter Value", name=f"{name}_shape", error_msg=None, input_type='number'),
@@ -115,7 +116,7 @@ def modelOutputTemplate(label, name, error_msg=None):
         labelDecoratorTemplate(H4(label, style="margin-left: -30px;"), name in model_required_keys),
         Div(
             Label("Name"),
-            Input(type="text", name=f"{name}_name", placeholder="A descriptive name of the model output content", style=text_input_style)
+            Input(type="text", name=f"{name}_name", id=f"{name}_name", placeholder="A descriptive name of the model output content", style=text_input_style)
         ),
         # TODO disabling this because we only work with models tha accept single outputs for now but
         # this should be flipped on and made working in the future
@@ -129,7 +130,7 @@ def modelOutputTemplate(label, name, error_msg=None):
         # https://gallery.fastht.ml/start_simple/sqlite_todo/code
         Div(
         Label("Classes (enter a single comma separated list of classes)"),
-        Input(type="text", name=f"{name}_classes", placeholder=''' e.g. "Annual Crop, Forest, Herbaceous Vegetation, Highway, Industrial Buildings, Pasture, Permanent Crop, Residential Buildings, River, SeaLake"''',
+        Input(type="text", name=f"{name}_classes", id=f"{name}_classes", placeholder=''' e.g. "Annual Crop, Forest, Herbaceous Vegetation, Highway, Industrial Buildings, Pasture, Permanent Crop, Residential Buildings, River, SeaLake"''',
                style=text_input_style),
         ),
         Div(f'{error_msg}', style='color: red;') if error_msg else None,
@@ -163,7 +164,7 @@ def update_statistics_by_norm(mlm_input_norm_type: str):
     elif mlm_input_norm_type == 'z-score':
         return  Div(Div(
                 Label("Mean Statistic (enter a single comma separated list of values)"),
-                Input(type="text", name=f"mlm_input_mean", 
+                Input(type="text", name=f"mlm_input_mean", id=f"mlm_input_mean", 
                     placeholder='''e.g. 1354.40546513, 1118.24399958, 1042.92983953, 947.62620298,
                                             1199.47283961, 1999.79090914, 2369.22292565,
                                             2296.82608323, 732.08340178, 12.11327804,
@@ -172,7 +173,7 @@ def update_statistics_by_norm(mlm_input_norm_type: str):
             ),
             Div(
                 Label("Std Statistic (enter a single comma separated list of values)"),
-                Input(type="text", name=f"mlm_input_std", 
+                Input(type="text", name=f"mlm_input_std", id=f"mlm_input_std", 
                     placeholder='''e.g. 245.71762908, 333.00778264, 395.09249139,
                                         593.75055589,
                                         566.4170017,
@@ -191,11 +192,11 @@ def update_statistics_by_norm(mlm_input_norm_type: str):
         return  Div(
                 Div(
                 Label("Min Statistic (enter a single comma separated list of values)"),
-                Input(type="text", name=f"mlm_input_min", 
+                Input(type="text", name=f"mlm_input_min", id=f"mlm_input_min", 
                     placeholder='''e.g. ....''', style=text_input_style)),
                 Div(
                 Label("Max Statistic (enter a single comma separated list of values)"),
-                Input(type="text", name=f"mlm_input_max", 
+                Input(type="text", name=f"mlm_input_max", id=f"mlm_input_max", 
                     placeholder='''e.g. ....''', style=text_input_style)),
                 name='statistics')
     else:

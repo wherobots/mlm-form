@@ -61,7 +61,8 @@ def form_format_to_stac_format_input(d):
     d['mlm_output_classes'] = [item.strip() for item in d.get('mlm_output_classes', '').split(',')]
     d['mlm_input_mean'] = [float(item.strip()) if item != '' else [''] for item in d.get('mlm_input_mean', '').split(',')]
     d['mlm_input_std'] = [float(item.strip()) if item != '' else [''] for item in d.get('mlm_input_std', '').split(',')]
-    d['mlm_input_bands'] = [item.strip() if item != '' else [''] for item in d.get('mlm_input_bands', '').split(',')]
+    d['mlm_input_min'] = [float(item.strip()) if item != '' else [''] for item in d.get('mlm_input_min', '').split(',')]
+    d['mlm_input_max'] = [float(item.strip()) if item != '' else [''] for item in d.get('mlm_input_max', '').split(',')]
     # from the fasthtml discord https://discordapp.com/channels/689892369998676007/1247700012952191049/1273789690691981412
     # this might change past version 0.4.4 it seems pretty hacky
     d['tasks'] = [task for task in tasks if d.pop(task, None)]

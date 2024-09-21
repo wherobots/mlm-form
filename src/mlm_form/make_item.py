@@ -34,13 +34,27 @@ def construct_ml_model_properties(d: Dict[str, Any]) -> MLModelProperties:
     )
 
     # Construct MLMStatistic
-    stats = [
+    if d['mlm_input_norm_type'] == 'z-score':
+        stats_vals = zip(d['mlm_input_mean'], d['mlm_input_std'])
+        stats = [
         MLMStatistic.model_construct(
             mean=mean,
             stddev=stddev,
         )
-        for mean, stddev in zip(d['mlm_input_mean'], d['mlm_input_std'])
-    ]
+        for mean, stddev in stats_vals
+        ]
+    elif d['mlm_input_norm_type'] == 'min-max':
+        stats_vals = zip(d['mlm_input_min'], d['mlm_input_max'])
+        stats = [
+        MLMStatistic.model_construct(
+            minimum=minimum,
+            maximum=maximum,
+        )
+        for minimum, maximum in stats_vals
+        ]
+        print('wtf')
+    else:
+        stats= None
 
     # Construct ModelInput
     model_input = ModelInput.model_construct(
