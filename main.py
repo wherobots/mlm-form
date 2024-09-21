@@ -10,7 +10,7 @@ from datetime import datetime
 import pystac
 import copy
 
-app, rt = fast_app(hdrs=(picolink), sess_path='/home/rave/mlm_form')
+app, rt = fast_app(hdrs=(picolink))
 
 @app.get('/')
 def homepage(session):

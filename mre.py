@@ -14,7 +14,7 @@ def mk_opts(nm, cs):
         *map(Option, cs))
 
 @app.get('/get_lesson')
-def get_lesson(chapter: str):
+def get_lesson_bug(chapter: str):
     return Select(*mk_opts('lesson', lessons[chapter]), name='lesson')
 
 @app.get('/')

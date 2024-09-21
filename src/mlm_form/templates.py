@@ -18,7 +18,7 @@ tasks = [task.value for task in TaskEnum]
 def inputTemplate(label, name, val, placeholder=None, error_msg=None, input_type='text', canValidateInline=False):
     return Div(hx_target='this', hx_swap='outerHTML', cls=f"{error_msg if error_msg else 'Valid'}", style=control_container_style)(
                labelDecoratorTemplate(Label(label), name in model_required_keys),
-               Input(name=name,type=input_type, placeholder=placeholder, value=f'{val}',hx_post=f'/{name.lower()}' if canValidateInline else None, style=text_input_style),
+               Input(id=name, name=name,type=input_type, placeholder=placeholder, value=f'{val}',hx_post=f'/{name.lower()}' if canValidateInline else None, style=text_input_style),
                Div(f'{error_msg}', style='color: red;') if error_msg else None)
 
 def inputListTemplate(label, name, placeholder=None, values=[None, None, None, None], error_msg=None, input_type='number', canValidateInline=False):
