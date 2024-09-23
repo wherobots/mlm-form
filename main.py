@@ -10,7 +10,7 @@ from datetime import datetime
 import pystac
 import copy
 
-app, rt = fast_app(hdrs=(picolink), sess_path='/home/rave/mlm_form')
+app, rt = fast_app(hdrs=(picolink))
 
 @app.get('/')
 def homepage(session):
@@ -30,7 +30,8 @@ def homepage(session):
             ),
             Grid(
                 session_form(session, submitOnLoad=True),
-                outputTemplate()
+                outputTemplate(),
+                id="page"
             ),
             style=main_element_style
         )
@@ -60,7 +61,8 @@ def form_format_to_stac_format_input(d):
     d['mlm_output_classes'] = [item.strip() for item in d.get('mlm_output_classes', '').split(',')]
     d['mlm_input_mean'] = [float(item.strip()) if item != '' else [''] for item in d.get('mlm_input_mean', '').split(',')]
     d['mlm_input_std'] = [float(item.strip()) if item != '' else [''] for item in d.get('mlm_input_std', '').split(',')]
-    d['mlm_input_bands'] = [item.strip() if item != '' else [''] for item in d.get('mlm_input_bands', '').split(',')]
+    d['mlm_input_min'] = [float(item.strip()) if item != '' else [''] for item in d.get('mlm_input_min', '').split(',')]
+    d['mlm_input_max'] = [float(item.strip()) if item != '' else [''] for item in d.get('mlm_input_max', '').split(',')]
     # from the fasthtml discord https://discordapp.com/channels/689892369998676007/1247700012952191049/1273789690691981412
     # this might change past version 0.4.4 it seems pretty hacky
     d['tasks'] = [task for task in tasks if d.pop(task, None)]
@@ -87,7 +89,7 @@ def submit(session, d: dict):
     ml_model_metadata = construct_ml_model_properties(d)
     assets = construct_assets(session['stac_format_d'].get('assets'))
     item = create_pystac_item(ml_model_metadata, assets)
-    return Div("Please fill in all required fields before submitting.", style='color: red;'), prettyJsonTemplate(item)
+    return prettyJsonTemplate(item)
 
 roles = [role for role in model_asset_roles if role not in model_asset_implicit_roles]
 
@@ -207,4 +209,5 @@ def submit_asset(session, d: dict):
             error_message = f"STACValidationError: {error_message}".replace('\\n', '<br>')
         return error_template(error_message), prettyJsonTemplate(dummy_item.assets['model'].to_dict())
     return prettyJsonTemplate(dummy_item.assets['model'].to_dict())
+
 serve()
