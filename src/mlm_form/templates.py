@@ -61,7 +61,6 @@ def selectEnumCascadeTemplate(label, options, name, hx_post, hx_target, error_ms
             hx_post=hx_post,
             hx_target=hx_target,
             hx_swap_oob=f"#{name}",
-            hx_trigger='change',
             style=select_input_style),
         Div(f'{error_msg}', style='color: red;') if error_msg else None)
 
@@ -94,7 +93,42 @@ def trueFalseRadioTemplate(label, name, error_msg=None):
         style=f'{control_container_style} margin-bottom: 15px;'
     )
 
-def modelInputTemplate(label, name, form_data, error_msg=None):
+def statisticsTemplate():
+        return  (Div(
+                Label("Mean Statistic (enter a single comma separated list of values)"),
+                Input(type="text", name=f"mlm_input_mean", id=f"mlm_input_mean",
+                    placeholder='''e.g. 1354.40546513, 1118.24399958, 1042.92983953, 947.62620298,
+                                            1199.47283961, 1999.79090914, 2369.22292565,
+                                            2296.82608323, 732.08340178, 12.11327804,
+                                            1819.01027855, 1118.92391149, 2594.14080798''',
+                                            style=text_input_style),
+            ),
+            Div(
+                Label("Std Statistic (enter a single comma separated list of values)"),
+                Input(type="text", name=f"mlm_input_std", id=f"mlm_input_std",
+                    placeholder='''e.g. 245.71762908, 333.00778264, 395.09249139,
+                                        593.75055589,
+                                        566.4170017,
+                                        861.18399006,
+                                        1086.63139075,
+                                        1117.98170791,
+                                        404.91978886,
+                                        4.77584468,
+                                        1002.58768311,
+                                        761.30323499,
+                                        1231.58581042''',
+                                        style=text_input_style)
+
+            ),
+            Div(
+                Label("Min Statistic (enter a single comma separated list of values)"),
+                Input(type="text", name=f"mlm_input_min", id=f"mlm_input_min",
+                    placeholder='''e.g. ....''', style=text_input_style)),
+                Div(
+                Label("Max Statistic (enter a single comma separated list of values)"),
+                Input(type="text", name=f"mlm_input_max", id=f"mlm_input_max",
+                    placeholder='''e.g. ....''', style=text_input_style)))
+def modelInputTemplate(label, name, error_msg=None):
     return Div(
         labelDecoratorTemplate(H4(label, style="margin-left: -30px;"), name in model_required_keys),
         Div(
@@ -111,9 +145,9 @@ def modelInputTemplate(label, name, form_data, error_msg=None):
         selectEnumTemplate("Input Data Type", datatypes,
             f"{name}_data_type", error_msg=None, canValidateInline=False),
         trueFalseRadioTemplate("Normalize Each Channel By Statistics", f"{name}_norm_by_channel", error_msg=None),
-        selectEnumCascadeTemplate(label="Normalization Type", options=normalize_type_values, name=f"{name}_norm_type", hx_post='/get_stats_input_boxes',
+        selectEnumTemplate(label="Normalization Type. If min-max, fill out min max statistics. If z-score, fill out mean and std statistics.", options=normalize_type_values, name=f"{name}_norm_type",
                                   hx_target='#statistics', error_msg=None),
-        Div(id='statistics'),
+        statisticsTemplate(),
         selectEnumTemplate("Resize Type", resize_type_values,
             f"{name}_resize_type", error_msg=None, canValidateInline=False),
         Div(f'{error_msg}', style='color: red;') if error_msg else None,

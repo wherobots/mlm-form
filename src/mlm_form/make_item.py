@@ -52,7 +52,6 @@ def construct_ml_model_properties(d: Dict[str, Any]) -> MLModelProperties:
         )
         for minimum, maximum in stats_vals
         ]
-        print('wtf')
     else:
         stats= None
 
