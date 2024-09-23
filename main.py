@@ -89,7 +89,7 @@ def submit(session, d: dict):
     ml_model_metadata = construct_ml_model_properties(d)
     assets = construct_assets(session['stac_format_d'].get('assets'))
     item = create_pystac_item(ml_model_metadata, assets)
-    return session_form(session), prettyJsonTemplate(item)
+    return prettyJsonTemplate(item)
 
 roles = [role for role in model_asset_roles if role not in model_asset_implicit_roles]
 
