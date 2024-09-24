@@ -15,11 +15,30 @@ common_ml_frameworks = ["PyTorch", "TensorFlow", "scikit-learn", "Hugging Face",
 # be aware of both the schema and key name that it's operating on.
 # in practice, model assets don't have any required keys so this works fine.
 model_required_keys = [
-    'name',
+    'model_name',
     'framework',
     'framework_version',
     'accelerator',
+    'accelerator_constrained',
+    'accelerator_count',
     'mlm:input',
+    'tasks',
+    'pretrained',
+    'batch_size_suggestion',
+    'mlm_input_name',
+    'mlm_input_bands',
+    'mlm_input_shape',
+    'mlm_input_dim_order',
+    'mlm_input_norm_by_channel',
+    'mlm_input_norm_type',
+    'mlm_input_resize_type',
+    'mlm_output_name',
+    'mlm_output_shape',
+    'mlm_output_dim_order',
+    'mlm_output_classes',
+    "href",
+    "mlm:artifact_type",
+
 ]
 
 def create_validation_function(model_class, field_name, user_friendly_message):

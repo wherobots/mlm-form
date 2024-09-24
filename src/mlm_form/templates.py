@@ -94,52 +94,54 @@ def trueFalseRadioTemplate(label, name, error_msg=None):
     )
 
 def statisticsTemplate():
-        return  (Div(
-                Label("Mean Statistic (enter a single comma separated list of values)"),
-                Input(type="text", name=f"mlm_input_mean", id=f"mlm_input_mean",
-                    placeholder='''e.g. 1354.40546513, 1118.24399958, 1042.92983953, 947.62620298,
-                                            1199.47283961, 1999.79090914, 2369.22292565,
-                                            2296.82608323, 732.08340178, 12.11327804,
-                                            1819.01027855, 1118.92391149, 2594.14080798''',
-                                            style=text_input_style),
-            ),
-            Div(
-                Label("Std Statistic (enter a single comma separated list of values)"),
-                Input(type="text", name=f"mlm_input_std", id=f"mlm_input_std",
-                    placeholder='''e.g. 245.71762908, 333.00778264, 395.09249139,
-                                        593.75055589,
-                                        566.4170017,
-                                        861.18399006,
-                                        1086.63139075,
-                                        1117.98170791,
-                                        404.91978886,
-                                        4.77584468,
-                                        1002.58768311,
-                                        761.30323499,
-                                        1231.58581042''',
-                                        style=text_input_style)
-
-            ),
-            Div(
-                Label("Min Statistic (enter a single comma separated list of values)"),
-                Input(type="text", name=f"mlm_input_min", id=f"mlm_input_min",
-                    placeholder='''e.g. ....''', style=text_input_style)),
-                Div(
-                Label("Max Statistic (enter a single comma separated list of values)"),
-                Input(type="text", name=f"mlm_input_max", id=f"mlm_input_max",
-                    placeholder='''e.g. ....''', style=text_input_style)))
+    return Div(
+        inputTemplate(
+            label="Mean Statistic (enter a single comma separated list of values)",
+            name="mlm_input_mean",
+            val="",
+            placeholder='''e.g. 1354.40546513, 1118.24399958, 1042.92983953, 947.62620298,
+                            1199.47283961, 1999.79090914, 2369.22292565,
+                            2296.82608323, 732.08340178, 12.11327804,
+                            1819.01027855, 1118.92391149, 2594.14080798''',
+            input_type="text"
+        ),
+        inputTemplate(
+            label="Std Statistic (enter a single comma separated list of values)",
+            name="mlm_input_std",
+            val="",
+            placeholder='''e.g. 245.71762908, 333.00778264, 395.09249139,
+                            593.75055589,
+                            566.4170017,
+                            861.18399006,
+                            1086.63139075,
+                            1117.98170791,
+                            404.91978886,
+                            4.77584468,
+                            1002.58768311,
+                            761.30323499,
+                            1231.58581042''',
+            input_type="text"
+        ),
+        inputTemplate(
+            label="Min Statistic (enter a single comma separated list of values)",
+            name="mlm_input_min",
+            val="",
+            placeholder='''e.g. ....''',
+            input_type="text"
+        ),
+        inputTemplate(
+            label="Max Statistic (enter a single comma separated list of values)",
+            name="mlm_input_max",
+            val="",
+            placeholder='''e.g. ....''',
+            input_type="text"
+        )
+    )
 def modelInputTemplate(label, name, error_msg=None):
     return Div(
         labelDecoratorTemplate(H4(label, style="margin-left: -30px;"), name in model_required_keys),
-        Div(
-            Label("Name"),
-            Input(type="text", name=f"{name}_name", id=f"{name}_name", placeholder="A descriptive name for the model input", style=text_input_style)
-        ),
-        Div(
-            Label("Bands (enter a single comma separated list of values)"),
-            Input(type="text", name=f"{name}_bands", id=f"{name}_bands", placeholder='''e.g. B01,B02,B03,B04,B05,B06,B07,B08,B8A,B09,B10,B11,B12''',
-                style=text_input_style),
-        ),
+        inputTemplate(label="Name", name=f"{name}_name", val="", placeholder="A descriptive name for the model input", input_type="text"),
+        inputTemplate(label="Bands (enter a single comma separated list of values)", name=f"{name}_bands", val="", placeholder='''e.g. B01,B02,B03,B04,B05,B06,B07,B08,B8A,B09,B10,B11,B12''', input_type="text"),
         inputListTemplate(label="Input Dimension Sizes", placeholder="Enter Value", name=f"{name}_shape", error_msg=None, input_type='number'),
         inputListTemplate(label="Input Dimension Labels", placeholder="Enter Text Label", name=f"{name}_dim_order", error_msg=None, input_type='text'),
         selectEnumTemplate("Input Data Type", datatypes,
@@ -159,25 +161,19 @@ def mk_input(**kw): return Input(id="new-title", name="title", placeholder="New 
 def modelOutputTemplate(label, name, error_msg=None):
     return Div(
         labelDecoratorTemplate(H4(label, style="margin-left: -30px;"), name in model_required_keys),
-        Div(
-            Label("Name"),
-            Input(type="text", name=f"{name}_name", id=f"{name}_name", placeholder="A descriptive name of the model output content", style=text_input_style)
-        ),
-        # TODO disabling this because we only work with models tha accept single outputs for now but
+        inputTemplate(label="Name", name=f"{name}_name", val="", placeholder="A descriptive name of the model output content", input_type="text"),
+        # TODO disabling this because we only work with models that accept single outputs for now but
         # this should be flipped on and made working in the future
         #selectCheckboxTemplate(label="Tasks", options=tasks, name=f"{name}_tasks", canValidateInline=False),
         inputListTemplate(label="Output Dimension Sizes", name=f"{name}_shape", placeholder="Enter Value", error_msg=None, input_type='number'),
-        # TODO possibly overly restrictive schema, this can;t contain numeric characters
+        # TODO possibly overly restrictive schema, this can't contain numeric characters
         inputListTemplate(label="Output Dimension Labels", name=f"{name}_dim_order", placeholder="Enter Text Label", error_msg=None, input_type='text'),
         selectEnumTemplate("Output Data Type", datatypes,
             f"{name}_data_type", error_msg=None, canValidateInline=False),
         # TODO this should be made dynamic so that users can enter an N length list of classes similar to
         # https://gallery.fastht.ml/start_simple/sqlite_todo/code
-        Div(
-        Label("Classes (enter a single comma separated list of classes)"),
-        Input(type="text", name=f"{name}_classes", id=f"{name}_classes", placeholder=''' e.g. "Annual Crop, Forest, Herbaceous Vegetation, Highway, Industrial Buildings, Pasture, Permanent Crop, Residential Buildings, River, SeaLake"''',
-               style=text_input_style),
-        ),
+        inputTemplate(label="Classes (enter a single comma separated list of classes)", name=f"{name}_classes", val="", 
+                      placeholder=''' e.g. "Annual Crop, Forest, Herbaceous Vegetation, Highway, Industrial Buildings, Pasture, Permanent Crop, Residential Buildings, River, SeaLake"''', input_type="text"),
         Div(f'{error_msg}', style='color: red;') if error_msg else None,
         style=f'{control_container_style} margin-left: 30px;'
     )
