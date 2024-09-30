@@ -12,26 +12,23 @@ import copy
 
 app, rt = fast_app(hdrs=(picolink))
 
+app_title = "Machine Learning Model Metadata Form"
+
 @app.get('/')
 def homepage(session):
     session = load_session(session)
-    return Body(
+    return (
+        Title(app_title),
         Main(
             Header(
-                H1("Machine Learning Model Metadata Form"),
-                Nav(
-                    A("Asset Form", href="/asset")
-                )
+                title_bar(app_title, session),
+                tab_bar(selected="/")
             ),
-            Section(
-                P("Please complete all fields below to describe the machine learning model metadata."),
-                Button("Clear Form", hx_post='/clear_form',
-                       style="margin-top: 20px;", hx_target="#result", hx_swap="innerHTML")
-            ),
-            Grid(
+            Div(
                 session_form(session, submitOnLoad=True),
                 outputTemplate(),
-                id="page"
+                id="page",
+                style="display: flex; flex-direction: row; overflow: auto;"
             ),
             style=main_element_style
         )
@@ -41,7 +38,7 @@ def homepage(session):
 def clear_form(session):
     session = load_session(session)
     session.clear()
-    return session_form(session)
+    return session_form(session), button_bar(session)
 
 def form_format_to_stac_format_input(d):
     # TODO for some reason the enum and checkbox template don't set default empty values
@@ -90,7 +87,7 @@ def submit(session, d: dict):
     ml_model_metadata = construct_ml_model_properties(d)
     assets = construct_assets(session['stac_format_d'].get('assets'))
     item = create_pystac_item(ml_model_metadata, assets)
-    return prettyJsonTemplate(item)
+    return prettyJsonTemplate(item), button_bar(session)
 
 roles = [role for role in model_asset_roles if role not in model_asset_implicit_roles]
 
@@ -105,7 +102,8 @@ def session_form(session, submitOnLoad=False):
     session.setdefault('form_format_d', {})
     result = session.get('form_format_d', {})
     trigger = "input delay:200ms, load" if submitOnLoad and result else "input delay:200ms"
-    session_form = Form(hx_post='/submit', hx_target='#result', hx_trigger=trigger, id="session_form", hx_swap_oob="#session_form")(
+    session_form = Form(hx_post='/submit', hx_target='#result', hx_trigger=trigger, id="session_form", hx_swap_oob="#session_form", style=form_style)(
+                    P("Please complete all fields below to describe the machine learning model metadata."),
                     inputTemplate(label="Model Name", name="model_name", placeholder="A unique identifier for your model", val='', input_type='text'),
                     inputTemplate(label="Architecture", name="architecture", placeholder="A recognizable name for the model architecture", val='', input_type='text'),
                     selectCheckboxTemplate(label="Tasks", options=tasks, name="tasks", canValidateInline=False),
@@ -140,7 +138,8 @@ def session_asset_form(session, submitOnLoad=False):
     # TODO decide whether to show just asset section or full json on asset page on load and edit
     #result = session['form_format_d'].get('assets', {})
     trigger = "input delay:200ms, load" if submitOnLoad and session.get('stac_format_d') else "input delay:200ms"
-    session_asset_form = Form(hx_post='/submit_asset', hx_target='#result', hx_trigger=trigger, id="session_asset_form", hx_swap_oob="#session_asset_form")(
+    session_asset_form = Form(hx_post='/submit_asset', hx_target='#result', hx_trigger=trigger, id="session_asset_form", hx_swap_oob="#session_asset_form", style=form_style)(
+                    P("Please complete all fields below to describe the machine learning model asset."),
                     inputTemplate(label="Title", name="title", val='', input_type='text', canValidateInline=False),
                     inputTemplate(label="URI", name="href", val='', input_type='text', canValidateInline=False),
                     inputTemplate(label="Media Type", name="media_type", val='', input_type='text', canValidateInline=False),
@@ -158,20 +157,17 @@ def session_asset_form(session, submitOnLoad=False):
 @app.get('/asset')
 def asset_homepage(session):
     session = load_session(session)
-    return Body(
+    return (
+        Title(app_title),
         Main(
             Header(
-                H1("Machine Learning Model Metadata Form"),
-                Nav(
-                    A("MLM Form", href="/")
-                )
+                title_bar(app_title, session),
+                tab_bar(selected="/asset")
             ),
-            Section(
-                P("Please complete all fields below to describe the machine learning model asset.")
-            ),
-            Grid(
+            Div(
                 session_asset_form(session, submitOnLoad=True),
-                outputTemplate()
+                outputTemplate(),
+                style="display: flex; flex-direction: row; overflow: auto;"
             ),
             style=main_element_style
         )
