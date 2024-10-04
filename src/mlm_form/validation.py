@@ -7,7 +7,9 @@ from pydantic import TypeAdapter, ValidationError
 model_asset_roles = ['mlm:model', 'mlm:weights', 'mlm:checkpoint']
 model_asset_implicit_roles = ['mlm:model']
 model_asset_artifact_types = ['torch.save', 'torch.jit.script', 'torch.export', 'torch.compile']
-datatypes = ['int8', 'int16', 'int32', 'int64', 'uint8', 'uint16', 'uint32', 'uint64', 'float16', 'float32', 'float64', 'cint16', 'cint32', 'cfloat32', 'cfloat64', 'other']
+datatypes = ['int8', 'int16', 'int32', 'int64', 'uint8', 'uint16', 'uint32',
+             'uint64', 'float16', 'float32', 'float64', 'cint16', 'cint32',
+             'cfloat32', 'cfloat64', 'other']
 # TODO drop down or enter your own input field for fields where we recommend common choices but want to provide flexibility
 common_ml_frameworks = ["PyTorch", "TensorFlow", "scikit-learn", "Hugging Face", "Keras", "JAX"]
 
@@ -32,10 +34,12 @@ model_required_keys = [
     'mlm_input_norm_by_channel',
     'mlm_input_norm_type',
     'mlm_input_resize_type',
+    'mlm_input_data_type',
     'mlm_output_name',
     'mlm_output_shape',
     'mlm_output_dim_order',
     'mlm_output_classes',
+    'mlm_output_data_type',
     "href",
     "mlm:artifact_type",
 
