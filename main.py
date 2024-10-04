@@ -22,7 +22,8 @@ def homepage(session):
         Main(
             Header(
                 title_bar(app_title, session),
-                tab_bar(selected="/")
+                tab_bar(selected="/"),
+                Img(src="https://static.scarf.sh/a.png?x-pxid=0a803684-62c5-4f72-8971-01626aa82623", referrerpolicy="no-referrer-when-downgrade"),
             ),
             Div(
                 session_form(session, submitOnLoad=True),
