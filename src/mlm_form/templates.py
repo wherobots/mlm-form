@@ -38,7 +38,7 @@ def inputListTemplate(label, name, placeholder=None, values=[None, None, None, N
 
 def mk_opts(nm, cs):
     return (
-        Option(f'-- select {nm} --', selected=True, value=''),
+        Option(f'-- select {nm} --', disabled=True, selected=True, value=''),
         *map(lambda c: Option(c, value=c), cs))
 
 def selectEnumTemplate(label, options, name, hx_target=None, error_msg=None, canValidateInline=False):
@@ -50,19 +50,6 @@ def selectEnumTemplate(label, options, name, hx_target=None, error_msg=None, can
             id=name,
             hx_post=f'/{name.lower()}' if canValidateInline else None,
             hx_target=hx_target,
-            style=select_input_style),
-        Div(f'{error_msg}', style='color: red;') if error_msg else None)
-
-def selectEnumCascadeTemplate(label, options, name, hx_post, hx_target, error_msg=None):
-    return Div(hx_target='this', cls=f"{error_msg if error_msg else 'Valid'}", style=control_container_style)(
-        labelDecoratorTemplate(Label(label), name in model_required_keys),
-        Select(
-            *mk_opts(name, options),
-            name=name,
-            id=name,
-            hx_post=hx_post,
-            hx_target=hx_target,
-            hx_swap_oob=f"#{name}",
             style=select_input_style),
         Div(f'{error_msg}', style='color: red;') if error_msg else None)
 
@@ -174,7 +161,7 @@ def modelOutputTemplate(label, name, error_msg=None):
             f"{name}_data_type", error_msg=None, canValidateInline=False),
         # TODO this should be made dynamic so that users can enter an N length list of classes similar to
         # https://gallery.fastht.ml/start_simple/sqlite_todo/code
-        inputTemplate(label="Classes (enter a single comma separated list of classes)", name=f"{name}_classes", val="", 
+        inputTemplate(label="Classes (enter a single comma separated list of classes)", name=f"{name}_classes", val="",
                       placeholder=''' e.g. "Annual Crop, Forest, Herbaceous Vegetation, Highway, Industrial Buildings, Pasture, Permanent Crop, Residential Buildings, River, SeaLake"''', input_type="text"),
         Div(f'{error_msg}', style='color: red;') if error_msg else None,
         style=f'{control_container_style} margin-left: 30px;'
@@ -204,7 +191,7 @@ def prettyJsonTemplate(obj):
 def error_template(msg):
     return  Div(msg, style='color: red; white-space: pre-wrap; margin-left: 10px; margin-bottom: 15px; text-indent: -10px;')
 
-    
+
 copy_js_file_path = os.path.join(os.path.dirname(__file__), 'js', 'copy_to_clipboard.js')
 copy_js = None
 with open(copy_js_file_path, 'r') as file:
@@ -212,9 +199,9 @@ with open(copy_js_file_path, 'r') as file:
 
 def copy_to_clipboard_button(item):
     return Button(
-        'Copy JSON', 
-        style='margin-left: 10px; min-width: 120px;', 
-        onclick=copy_js, 
+        'Copy JSON',
+        style='margin-left: 10px; min-width: 120px;',
+        onclick=copy_js,
         data_clipboard_text=(json.dumps(item, indent=2) if item else ""),
         disabled=(item is None)
     )
@@ -265,8 +252,8 @@ def tab_bar(selected):
     return Nav(
         Div(
             A(
-                "MLM Form", 
-                href="/", 
+                "MLM Form",
+                href="/",
                 _class="secondary" if selected == "/" else "contrast",
                 style=tab_style["selected"] if selected == "/" else tab_style["unselected"], role="button"
             ),
@@ -274,8 +261,8 @@ def tab_bar(selected):
         ),
         Div(
             A(
-                "Asset Form", 
-                href="/asset", 
+                "Asset Form",
+                href="/asset",
                 _class="secondary" if selected == "/asset" else "contrast",
                 style=tab_style["selected"] if selected == "/asset" else tab_style["unselected"], role="button"
             ),
