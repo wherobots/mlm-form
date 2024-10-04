@@ -103,7 +103,16 @@ def session_form(session, submitOnLoad=False):
     result = session.get('form_format_d', {})
     trigger = "input delay:200ms, load" if submitOnLoad and result else "input delay:200ms"
     session_form = Form(hx_post='/submit', hx_target='#result', hx_trigger=trigger, id="session_form", hx_swap_oob="#session_form", style=form_style)(
-                    P("Please complete all fields below to describe the machine learning model metadata."),
+                    P(
+                        "The Machine Learning Model metadata specification enables describing metadata to reproduce model inference "
+                        "and enable search and discovery. Describing your model with the MLM makes it easier to share, reuse, and run "
+                        "on supported inference providers (like ",
+                        A("Wherobots", href="https://wherobots.com/wherobotsai-for-raster-inference/", target="_blank", rel="noopener noreferrer", cls="border-b-2 border-b-black/30 hover:border-b-black/80"),
+                        ") and open source ml frameworks.\n\n"
+                        "Please complete all required fields below to describe the machine learning model metadata. For more information, see the ",
+                        A("MLM README", href="https://github.com/stac-extensions/mlm/blob/main/README.md", target="_blank", rel="noopener noreferrer", cls="border-b-2 border-b-black/30 hover:border-b-black/80"),
+                        "."
+                    ),
                     inputTemplate(label="Model Name", name="model_name", placeholder="A unique identifier for your model", val='', input_type='text'),
                     inputTemplate(label="Architecture", name="architecture", placeholder="A recognizable name for the model architecture", val='', input_type='text'),
                     selectCheckboxTemplate(label="Tasks", options=tasks, name="tasks", canValidateInline=False),
