@@ -22,7 +22,8 @@ def homepage(session):
         Main(
             Header(
                 title_bar(app_title, session),
-                tab_bar(selected="/")
+                tab_bar(selected="/"),
+                Img(src="https://static.scarf.sh/a.png?x-pxid=0a803684-62c5-4f72-8971-01626aa82623", referrerpolicy="no-referrer-when-downgrade"),
             ),
             Div(
                 session_form(session, submitOnLoad=True),
@@ -103,7 +104,18 @@ def session_form(session, submitOnLoad=False):
     result = session.get('form_format_d', {})
     trigger = "input delay:200ms, load" if submitOnLoad and result else "input delay:200ms"
     session_form = Form(hx_post='/submit', hx_target='#result', hx_trigger=trigger, id="session_form", hx_swap_oob="#session_form", style=form_style)(
-                    P("Please complete all fields below to describe the machine learning model metadata."),
+                    P(
+                        "The ",
+                        A("STAC Machine Learning Model", href="https://github.com/stac-extensions/mlm/blob/main/README.md", target="_blank", rel="noopener noreferrer", cls="border-b-2 border-b-black/30 hover:border-b-black/80"),
+                        "(MLM) metadata specification makes it easy to describe the metadata needed to reproduce model inference and enable search and discovery. The MLM makes it easier to share, reuse, and run models "
+                        "on inference providers that support it, such as ",
+                        A("Wherobots", href="https://wherobots.com/wherobotsai-for-raster-inference/", target="_blank", rel="noopener noreferrer", cls="border-b-2 border-b-black/30 hover:border-b-black/80"),
+                        ", and open source ml frameworks.\n\n"
+                        "Please complete all required fields below and in the Asset Form prior to copying or downloading the JSON result. Downloaded JSONs will be stored in your download directory and named based on Model Name field.", 
+                        "For more information on the specification, refer to the ",
+                        A("MLM documentation", href="https://github.com/stac-extensions/mlm/blob/main/README.md", target="_blank", rel="noopener noreferrer", cls="border-b-2 border-b-black/30 hover:border-b-black/80"),
+                        ".",
+                    ),
                     inputTemplate(label="Model Name", name="model_name", placeholder="A unique identifier for your model", val='', input_type='text'),
                     inputTemplate(label="Architecture", name="architecture", placeholder="A recognizable name for the model architecture", val='', input_type='text'),
                     selectCheckboxTemplate(label="Tasks", options=tasks, name="tasks", canValidateInline=False),
