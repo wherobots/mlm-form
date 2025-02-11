@@ -1,4 +1,4 @@
-python-fasthtml==0.6.0
+python-fasthtml==0.12.1
 stac-model==0.2.0
 pydantic==2.8.2
 pystac==1.10.1
