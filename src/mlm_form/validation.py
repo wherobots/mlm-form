@@ -6,7 +6,7 @@ from pydantic import TypeAdapter, ValidationError
 # TODO try to get these from schema itself, or pydantic
 model_asset_roles = ['mlm:model', 'mlm:weights', 'mlm:checkpoint']
 model_asset_implicit_roles = ['mlm:model']
-model_asset_artifact_types = ['torch.save', 'torch.jit.script', 'torch.export', 'torch.compile']
+model_asset_artifact_types = ['torch.save', 'torch.jit.save', 'torch.export.save', 'tf.keras.Model.save', 'tf.keras.Model.save_weights', 'tf.keras.Model.export']
 datatypes = ['int8', 'int16', 'int32', 'int64', 'uint8', 'uint16', 'uint32',
              'uint64', 'float16', 'float32', 'float64', 'cint16', 'cint32',
              'cfloat32', 'cfloat64', 'other']
