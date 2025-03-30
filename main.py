@@ -151,7 +151,15 @@ def session_asset_form(session, submitOnLoad=False):
     #result = session['form_format_d'].get('assets', {})
     trigger = "input delay:200ms, load" if submitOnLoad and session.get('stac_format_d') else "input delay:200ms"
     session_asset_form = Form(hx_post='/submit_asset', hx_target='#result', hx_trigger=trigger, id="session_asset_form", hx_swap_oob="#session_asset_form", style=form_style)(
-                    P("Please complete all fields below to describe the machine learning model asset."),
+                    P(
+                        "Please complete all fields below to describe the machine learning model asset. ",
+                        "The artifact type field follows the convention described in the ",
+                        A(
+                            "MLM best practices document",
+                            href="https://github.com/stac-extensions/mlm/blob/main/best-practices.md#framework-specific-artifact-types"
+                        ),
+                        ". A model artifact is referenced by the framework specific method that created it."
+                    ),
                     inputTemplate(label="Title", name="title", val='', input_type='text', canValidateInline=False),
                     inputTemplate(label="URI", name="href", val='', input_type='text', canValidateInline=False),
                     inputTemplate(label="Media Type", name="media_type", val='', input_type='text', canValidateInline=False),
