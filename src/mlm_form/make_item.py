@@ -5,7 +5,7 @@ import shapely
 from dateutil.parser import parse as parse_dt
 from pystac.extensions.file import FileExtension
 
-from stac_model.input import InputStructure, MLMStatistic, ModelInput
+from stac_model.input import InputStructure, ModelInput
 from stac_model.output import MLMClassification, ModelOutput, ModelResult
 from stac_model.schema import MLModelExtension, MLModelProperties
 
@@ -26,36 +26,13 @@ def construct_ml_model_properties(d: Dict[str, Any]) -> MLModelProperties:
     Returns:
         MLModelProperties: The pydantic model for MLM specific properties.
     """
-    # Construct InputStructure
+
     input_struct = InputStructure.model_construct(
         shape=d["mlm_input_shape"],
         dim_order=d["mlm_input_dim_order"],
         data_type=d["mlm_input_data_type"],
     )
 
-    # Construct MLMStatistic
-    if d["mlm_input_norm_type"] == "z-score":
-        stats_vals = zip(d["mlm_input_mean"], d["mlm_input_std"])
-        stats = [
-            MLMStatistic.model_construct(
-                mean=mean,
-                stddev=stddev,
-            )
-            for mean, stddev in stats_vals
-        ]
-    elif d["mlm_input_norm_type"] == "min-max":
-        stats_vals = zip(d["mlm_input_min"], d["mlm_input_max"])
-        stats = [
-            MLMStatistic.model_construct(
-                minimum=minimum,
-                maximum=maximum,
-            )
-            for minimum, maximum in stats_vals
-        ]
-    else:
-        stats = None
-
-    # Construct ModelInput
     model_input = ModelInput.model_construct(
         name=d["mlm_input_name"],
         bands=d["mlm_input_bands"],
@@ -66,25 +43,21 @@ def construct_ml_model_properties(d: Dict[str, Any]) -> MLModelProperties:
             else (True if d["mlm_input_norm_by_channel"] == "true" else False)
         ),
         norm_type=d["mlm_input_norm_type"],
-        resize_type=d["mlm_input_resize_type"],
-        statistics=stats,
+        resize_type=d["mlm_input_resize_type"]
     )
 
-    # Construct ModelResult
     result_struct = ModelResult.model_construct(
         shape=d["mlm_output_shape"],
         dim_order=d["mlm_output_dim_order"],
         data_type=d["mlm_output_data_type"],
     )
 
-    # Construct MLMClassification
     if d["mlm_output_classes"] == [""]:
         class_objects = [
             MLMClassification(
                 value=class_value + 1,
                 name=class_name,
             )
-            # TODO the user needs to determine the class name / value mapping
             for class_value, class_name in enumerate(
                 ["example_class1", "example_class2", "example_class3"]
             )
@@ -92,11 +65,9 @@ def construct_ml_model_properties(d: Dict[str, Any]) -> MLModelProperties:
     else:
         class_objects = [
             MLMClassification(value=class_value + 1, name=class_name, description="")
-            # TODO the user needs to determine the class name / value mapping
             for class_value, class_name in enumerate(d["mlm_output_classes"])
         ]
 
-    # Construct ModelOutput
     model_output = ModelOutput.model_construct(
         name=d["mlm_output_name"],
         tasks=d["tasks"],
@@ -105,7 +76,6 @@ def construct_ml_model_properties(d: Dict[str, Any]) -> MLModelProperties:
         post_processing_function=None,
     )
 
-    # Construct MLModelProperties
     ml_model_meta = MLModelProperties.model_construct(
         name=d["model_name"],
         architecture=d["architecture"],

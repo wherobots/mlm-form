@@ -9,12 +9,11 @@ from .make_item import (
     construct_assets,
     create_pystac_item,
 )
-from stac_model.input import NormalizeType, ResizeType
+from stac_model.input import ResizeType
 from typing import get_args
 from stac_model.base import TaskEnum
 
-# idk what Typing.Literal is or why I need to do this :(
-normalize_type_values = [value for value in get_args(get_args(NormalizeType)[0])]
+
 resize_type_values = [value for value in get_args(get_args(ResizeType)[0])]
 tasks = [task.value for task in TaskEnum]
 
@@ -160,52 +159,6 @@ def trueFalseRadioTemplate(label, name, error_msg=None):
     )
 
 
-def statisticsTemplate():
-    return Div(
-        inputTemplate(
-            label="Mean Statistic (enter a single comma separated list of values)",
-            name="mlm_input_mean",
-            val="",
-            placeholder="""e.g. 1354.40546513, 1118.24399958, 1042.92983953, 947.62620298,
-                            1199.47283961, 1999.79090914, 2369.22292565,
-                            2296.82608323, 732.08340178, 12.11327804,
-                            1819.01027855, 1118.92391149, 2594.14080798""",
-            input_type="text",
-        ),
-        inputTemplate(
-            label="Std Statistic (enter a single comma separated list of values)",
-            name="mlm_input_std",
-            val="",
-            placeholder="""e.g. 245.71762908, 333.00778264, 395.09249139,
-                            593.75055589,
-                            566.4170017,
-                            861.18399006,
-                            1086.63139075,
-                            1117.98170791,
-                            404.91978886,
-                            4.77584468,
-                            1002.58768311,
-                            761.30323499,
-                            1231.58581042""",
-            input_type="text",
-        ),
-        inputTemplate(
-            label="Min Statistic (enter a single comma separated list of values)",
-            name="mlm_input_min",
-            val="",
-            placeholder="""e.g. ....""",
-            input_type="text",
-        ),
-        inputTemplate(
-            label="Max Statistic (enter a single comma separated list of values)",
-            name="mlm_input_max",
-            val="",
-            placeholder="""e.g. ....""",
-            input_type="text",
-        ),
-    )
-
-
 def modelInputTemplate(label, name, error_msg=None):
     return Div(
         labelDecoratorTemplate(
@@ -243,26 +196,6 @@ def modelInputTemplate(label, name, error_msg=None):
             "Input Data Type",
             datatypes,
             f"{name}_data_type",
-            error_msg=None,
-            canValidateInline=False,
-        ),
-        trueFalseRadioTemplate(
-            "Normalize Each Channel By Statistics",
-            f"{name}_norm_by_channel",
-            error_msg=None,
-        ),
-        selectEnumTemplate(
-            label="Normalization Type. If min-max, fill out min max statistics. If z-score, fill out mean and std statistics.",
-            options=normalize_type_values,
-            name=f"{name}_norm_type",
-            hx_target="#statistics",
-            error_msg=None,
-        ),
-        statisticsTemplate(),
-        selectEnumTemplate(
-            "Resize Type",
-            resize_type_values,
-            f"{name}_resize_type",
             error_msg=None,
             canValidateInline=False,
         ),
