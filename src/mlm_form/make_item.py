@@ -5,12 +5,12 @@ import shapely
 from dateutil.parser import parse as parse_dt
 from pystac.extensions.file import FileExtension
 
-from stac_model.base import ProcessingExpression
-from stac_model.input import InputStructure, MLMStatistic, ModelInput
+from stac_model.input import InputStructure, ModelInput
 from stac_model.output import MLMClassification, ModelOutput, ModelResult
-from stac_model.schema import ItemMLModelExtension, MLModelExtension, MLModelProperties
+from stac_model.schema import MLModelExtension, MLModelProperties
 
 # Assuming the necessary Pydantic models are imported or defined above
+
 
 def construct_ml_model_properties(d: Dict[str, Any]) -> MLModelProperties:
     """Creates the pydantic model for model properties.
@@ -26,113 +26,85 @@ def construct_ml_model_properties(d: Dict[str, Any]) -> MLModelProperties:
     Returns:
         MLModelProperties: The pydantic model for MLM specific properties.
     """
-    # Construct InputStructure
+
     input_struct = InputStructure.model_construct(
-        shape=d['mlm_input_shape'],
-        dim_order=d['mlm_input_dim_order'],
-        data_type=d['mlm_input_data_type'],
+        shape=d["mlm_input_shape"],
+        dim_order=d["mlm_input_dim_order"],
+        data_type=d["mlm_input_data_type"],
     )
 
-    # Construct MLMStatistic
-    if d['mlm_input_norm_type'] == 'z-score':
-        stats_vals = zip(d['mlm_input_mean'], d['mlm_input_std'])
-        stats = [
-        MLMStatistic.model_construct(
-            mean=mean,
-            stddev=stddev,
-        )
-        for mean, stddev in stats_vals
-        ]
-    elif d['mlm_input_norm_type'] == 'min-max':
-        stats_vals = zip(d['mlm_input_min'], d['mlm_input_max'])
-        stats = [
-        MLMStatistic.model_construct(
-            minimum=minimum,
-            maximum=maximum,
-        )
-        for minimum, maximum in stats_vals
-        ]
-    else:
-        stats= None
-
-    # Construct ModelInput
     model_input = ModelInput.model_construct(
-        name=d['mlm_input_name'],
-        bands=d['mlm_input_bands'],
+        name=d["mlm_input_name"],
+        bands=d["mlm_input_bands"],
         input=input_struct,
         norm_by_channel=(
-            None if d.get('mlm_input_norm_by_channel') is None
-            else (True if d['mlm_input_norm_by_channel'] == 'true' else False)
+            None
+            if d.get("mlm_input_norm_by_channel") is None
+            else (True if d["mlm_input_norm_by_channel"] == "true" else False)
         ),
-        norm_type=d['mlm_input_norm_type'],
-        resize_type=d['mlm_input_resize_type'],
-        statistics=stats
+        norm_type=d["mlm_input_norm_type"],
+        resize_type=d["mlm_input_resize_type"]
     )
 
-    # Construct ModelResult
     result_struct = ModelResult.model_construct(
-        shape=d['mlm_output_shape'],
-        dim_order=d['mlm_output_dim_order'],
-        data_type=d['mlm_output_data_type'],
+        shape=d["mlm_output_shape"],
+        dim_order=d["mlm_output_dim_order"],
+        data_type=d["mlm_output_data_type"],
     )
 
-    # Construct MLMClassification
-    if d['mlm_output_classes'] == ['']:
+    if d["mlm_output_classes"] == [""]:
         class_objects = [
             MLMClassification(
-                value=class_value+1,
+                value=class_value + 1,
                 name=class_name,
             )
-            # TODO the user needs to determine the class name / value mapping
-            for class_value, class_name in enumerate(["example_class1", "example_class2", "example_class3"])
+            for class_value, class_name in enumerate(
+                ["example_class1", "example_class2", "example_class3"]
+            )
         ]
     else:
         class_objects = [
-            MLMClassification(
-                value=class_value+1,
-                name=class_name,
-                description=""
-            )
-            # TODO the user needs to determine the class name / value mapping
-            for class_value, class_name in enumerate(d['mlm_output_classes'])
+            MLMClassification(value=class_value + 1, name=class_name, description="")
+            for class_value, class_name in enumerate(d["mlm_output_classes"])
         ]
 
-    # Construct ModelOutput
     model_output = ModelOutput.model_construct(
-        name=d['mlm_output_name'],
-        tasks=d['tasks'],
+        name=d["mlm_output_name"],
+        tasks=d["tasks"],
         classes=class_objects,
         result=result_struct,
         post_processing_function=None,
     )
 
-    # Construct MLModelProperties
     ml_model_meta = MLModelProperties.model_construct(
-        name=d['model_name'],
-        architecture=d['architecture'],
-        tasks=d['tasks'],
-        framework=d['framework'],
-        framework_version=d['framework_version'],
-        accelerator=d['accelerator'],
+        name=d["model_name"],
+        architecture=d["architecture"],
+        tasks=d["tasks"],
+        framework=d["framework"],
+        framework_version=d["framework_version"],
+        accelerator=d["accelerator"],
         accelerator_constrained=(
-            None if d.get('accelerator_constrained') is None
-            else (True if d['accelerator_constrained'] == 'true' else False)
+            None
+            if d.get("accelerator_constrained") is None
+            else (True if d["accelerator_constrained"] == "true" else False)
         ),
-        accelerator_summary=d['accelerator_summary'],
-        accelerator_count=d['accelerator_count'],
-        memory_size=d['memory_size'],
+        accelerator_summary=d["accelerator_summary"],
+        accelerator_count=d["accelerator_count"],
+        memory_size=d["memory_size"],
         pretrained=(
-            None if d.get('pretrained') is None
-            else (True if d['pretrained'].lower() == 'true' else False)
+            None
+            if d.get("pretrained") is None
+            else (True if d["pretrained"].lower() == "true" else False)
         ),
-        pretrained_source=d['pretrained_source'],
-        total_parameters=d['total_parameters'],
-        batch_size_suggestion=d['batch_size_suggestion'],
+        pretrained_source=d["pretrained_source"],
+        total_parameters=d["total_parameters"],
+        batch_size_suggestion=d["batch_size_suggestion"],
         input=[model_input],
         output=[model_output],
     )
 
     return ml_model_meta
+
 
 def construct_assets(d: Dict[str, Any]) -> Dict[str, pystac.Asset]:
     """Creates the assets for the STAC item.
@@ -148,20 +120,27 @@ def construct_assets(d: Dict[str, Any]) -> Dict[str, pystac.Asset]:
         Dict[str, pystac.Asset]: The assets for the STAC item.
     """
     assets = {}
-    required_keys = ['href']
+    required_keys = ["href"]
     if d and all(key in d and d[key] is not None for key in required_keys):
         # TODO correct mlm_ > mlm:
         model_asset = pystac.Asset(
-            title=d.get('title'),
-            href=d.get('href'),
-            media_type=d.get('type'),
-            roles=d.get('roles'),
-            extra_fields={"mlm:artifact_type": d.get('mlm:artifact_type'),}
+            title=d.get("title"),
+            href=d.get("href"),
+            media_type=d.get("type"),
+            roles=d.get("roles"),
+            extra_fields={
+                "mlm:artifact_type": d.get("mlm:artifact_type"),
+            },
         )
         assets["model"] = model_asset
     return assets
 
-def create_pystac_item(ml_model_meta: MLModelProperties, assets: Dict[str, pystac.Asset], self_href="./item.json") -> pystac.Item:
+
+def create_pystac_item(
+    ml_model_meta: MLModelProperties,
+    assets: Dict[str, pystac.Asset],
+    self_href="./item.json",
+) -> pystac.Item:
     """Creates stac item metadata and extends it with MLM specific properties.
 
     This includes asset level metadata. TODO is including asset metadata in the pystac item. Not sure
@@ -217,13 +196,17 @@ def create_pystac_item(ml_model_meta: MLModelProperties, assets: Dict[str, pysta
     if assets:
         model_asset = cast(
             FileExtension[pystac.Asset],
-            pystac.extensions.file.FileExtension.ext(assets["model"], add_if_missing=True),
+            pystac.extensions.file.FileExtension.ext(
+                assets["model"], add_if_missing=True
+            ),
         )
 
     item_mlm = MLModelExtension.ext(item, add_if_missing=True)
     # TODO validation issues because of none fields and can't bypass validation on whole model level
     item_d = item.to_dict()
-    properties = ml_model_meta.model_dump(by_alias=True, exclude_unset=True, exclude_defaults=True)
-    #item_mlm.apply(ml_model_meta.model_dump(by_alias=True, exclude_unset=True, exclude_defaults=True))
-    item_d['properties'].update(properties)
+    properties = ml_model_meta.model_dump(
+        by_alias=True, exclude_unset=True, exclude_defaults=True
+    )
+    # item_mlm.apply(ml_model_meta.model_dump(by_alias=True, exclude_unset=True, exclude_defaults=True))
+    item_d["properties"].update(properties)
     return item_d
